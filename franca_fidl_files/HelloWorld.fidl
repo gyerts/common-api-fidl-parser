@@ -1,0 +1,280 @@
+package commonapi.examples
+
+interface E04PhoneBook {
+
+    version { major 1 minor 0 }
+
+    <** @description : the phone book itself **>
+    attribute phoneBookStruct [] phoneBook readonly
+
+
+
+    <** @description : filter operations **>
+    method setPhoneBookDataFilter {
+        in {
+            elementFilterStruct elementFilter
+            contentFilterStruct [] contentFilter
+        }
+    }
+
+    <** @description : filter result **>
+    broadcast phoneBookDataSet selective {
+        out {
+            phoneBookDataElementMap [] phoneBookDataSet
+        }
+    }
+
+    <** @description : Data types of the phone book itself **>
+    enumeration phoneNumberEnum {
+        WORK
+        HOME
+        MOBILE1
+        MOBILE2
+    }
+
+    map phoneNumberMap {
+        phoneNumberEnum to String
+    }
+
+    struct phoneBookStruct {
+        String name
+        String forename
+        String organisation
+        String address
+        String email
+        phoneNumberMap phoneNumber
+    }
+
+    <** @description : Data types for the filter operations **>
+
+    struct elementFilterStruct {
+        Boolean addName
+        Boolean addForename
+        Boolean addOrganisation
+        Boolean addAddress
+        Boolean addEmail
+        Boolean addPhoneNumber
+    }
+
+    struct contentFilterStruct {
+        phoneBookDataElementEnum element
+        String expression
+    }
+
+    <** @description : Data types for the result of the phone book filter **>
+    enumeration phoneBookDataElementEnum {
+        NAME
+        FORENAME
+        ORGANISATION
+        ADDRESS
+        EMAIL
+        PHONENUMBER
+    }
+
+    struct phoneBookDataElement polymorphic {
+    }
+
+    struct phoneBookDataElementString extends phoneBookDataElement {
+        String content
+    }
+
+    struct phoneBookDataElementPhoneNumber extends phoneBookDataElement {
+        phoneNumberMap content
+    }
+
+    map phoneBookDataElementMap {
+        phoneBookDataElementEnum to phoneBookDataElement
+    }
+}
+
+interface E06Unions {
+    version { major 1 minor 0 }
+
+    attribute CommonTypes.SettingsUnion u
+    attribute CommonTypes.SettingsStruct x
+}
+
+typeCollection CommonTypes {
+
+    typedef MyTypedef is Int32
+
+    enumeration MyEnum {
+        DEFAULT
+        ON
+        OFF
+    }
+
+    union SettingsUnion {
+        MyTypedef id
+        MyEnum status
+        UInt8 channel
+        String name
+    }
+
+    struct SettingsStruct polymorphic {
+    }
+
+    struct SettingsStructMyTypedef extends SettingsStruct {
+        MyTypedef id
+    }
+
+    struct SettingsStructMyEnum extends SettingsStruct {
+        MyEnum status
+    }
+
+    struct SettingsStructUInt8 extends SettingsStruct {
+        UInt8 channel
+    }
+
+    struct SettingsStructString extends SettingsStruct {
+        String name
+    }
+}
+
+interface E05Manager manages E05Device, E05SpecialDevice {
+    version { major 1 minor 0 }
+
+    attribute String [] myDevices
+}
+
+interface E05Device {
+    version { major 1 minor 0 }
+
+    method doSomething {
+    }
+}
+
+interface E05SpecialDevice extends E05Device {
+    version { major 1 minor 0 }
+
+    method doSomethingSpecial {
+    }
+}
+
+interface E02Attributes {
+    version { major 1 minor 0 }
+
+    attribute Int32 x
+
+    attribute CommonTypes.a1Struct a1
+}
+
+typeCollection CommonTypes {
+
+    struct a1Struct {
+        String s
+        a2Struct a2
+    }
+
+    struct a2Struct {
+        Boolean b
+        Double d
+    }
+}
+
+interface E02Attributes {
+    version { major 1 minor 0 }
+
+    attribute Int32 x
+    attribute CommonTypes.a1Struct a1
+}
+
+typeCollection CommonTypes {
+    version { major 1 minor 0 }
+
+    struct a1Struct {
+        String s
+        a2Struct a2
+    }
+
+    struct a2Struct {
+        Int32 a
+        Boolean b
+        Double d
+    }
+}
+
+interface E04PhoneBook {
+    version { major 0 minor 0 }
+
+    <** @description : the phone book itself **>
+    attribute phoneBookStruct [] phoneBook readonly
+
+    <** @description : filter operations **>
+    method setPhoneBookDataFilter {
+        in {
+            elementFilterStruct elementFilter
+            contentFilterStruct [] contentFilter
+        }
+    }
+
+    <** @description : filter result and something more **>
+    broadcast phoneBookDataSet selective {
+        out {
+            phoneBookDataElementMap [] phoneBookDataSet
+        }
+    }
+
+    <** @description : Data types of the phone book itself **>
+    enumeration phoneNumberEnum {
+        WORK
+        HOME
+        MOBILE1
+        MOBILE2
+    }
+
+    map phoneNumberMap {
+        phoneNumberEnum to String
+    }
+
+    struct phoneBookStruct {
+        String name
+        String forename
+        String organisation
+        String address
+        String email
+        phoneNumberMap phoneNumber
+    }
+
+    <** @description : Data types for the filter operations **>
+
+    struct elementFilterStruct {
+        Boolean addName
+        Boolean addForename
+        Boolean addOrganisation
+        Boolean addAddress
+        Boolean addEmail
+        Boolean addPhoneNumber
+    }
+
+    struct contentFilterStruct {
+        phoneBookDataElementEnum element
+        String expression
+    }
+
+    <** @description : Data types for the result of the phone book filter **>
+    enumeration phoneBookDataElementEnum {
+        NAME
+        FORENAME
+        ORGANISATION
+        ADDRESS
+        EMAIL
+        PHONENUMBER
+    }
+
+    struct phoneBookDataElement polymorphic {
+    }
+
+    struct phoneBookDataElementString extends phoneBookDataElement {
+        String content
+    }
+
+    struct phoneBookDataElementPhoneNumber extends phoneBookDataElement {
+        phoneNumberMap content
+    }
+
+    map phoneBookDataElementMap {
+        phoneBookDataElementEnum to phoneBookDataElement
+    }
+}
+
