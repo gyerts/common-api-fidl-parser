@@ -111,16 +111,25 @@ class {{ class_name }}
    */
 
 {% for method in meta['methods'] %}
+
+{% if method["description"] %}
+  /**
+   * {{ method["description"] }}
+   */
+{% endif %}
   void response{{ method.name[0]|upper }}{{ method.name[1:] }}(
+{% if method["out"] %}
       const CommonAPI::CallStatus &_callStatus,
+{% else %}
+      const CommonAPI::CallStatus &_callStatus);
+{% endif %}
 {% for param in method["out"] %}
   {% if loop.last %}
-    const {{ param.type }} &_{{ param.name }}
+    const {{ param.type }} &_{{ param.name }});
   {% else %}
     const {{ param.type }} &_{{ param.name }},
 {% endif %}
 {% endfor %}
-  );
 {% endfor %}
 
   /* ==========================================================================================
@@ -129,14 +138,14 @@ class {{ class_name }}
    */
 
 {% for broadcast in meta['broadcasts'] %}
+
   /**
    * {{ broadcast["description"] }}
    */
-  {% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
-  {% set subscription = "subscription"+upper_name+"_" %}
-  {% set information = "information"+upper_name %}
-  {% set generatedCommonAPIEvent = "get"+upper_name+"Event()" %}
-
+{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
+{% set subscription = "subscription"+upper_name+"_" %}
+{% set information = "information"+upper_name %}
+{% set generatedCommonAPIEvent = "get"+upper_name+"Event()" %}
   inline void notify{{ upper_name }}(const bool _isNotify) {
     debug("%s __isNotify=%s", __func__, Converters::toString(_isNotify).c_str());
     if (_isNotify) {
@@ -158,8 +167,8 @@ class {{ class_name }}
    * ==========================================================================================
    */
 
-
 {% for method in meta['methods'] %}
+
   /**
    * {{ method["description"] }}
    */

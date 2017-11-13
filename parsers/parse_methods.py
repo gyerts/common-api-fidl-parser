@@ -12,11 +12,17 @@ def parse_methods(raw_data: list):
     methods = []
 
     for method_index in method_indexes:
+        shift = 0
         method = {
             "name": raw_data[method_index+1]
         }
+        if "fireAndForget" == raw_data[method_index + 2]:
+            method["fireAndForget"] = True
+            shift += 1
+        else:
+            method["fireAndForget"] = False
 
-        if raw_data[method_index+2] != "{":
+        if raw_data[method_index+2+shift] != "{":
             raise Exception("incorrect index of method start brace, but in this position "
                             "key word \"{}\"".format(raw_data[method_index+3]))
 

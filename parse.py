@@ -47,7 +47,6 @@ for file_path in all_files:
         ##################################################################################################
         # Make required variables for templates
         ##################################################################################################
-        print(all)
         for method in interface_content["methods"]:
             generate_types(method, all["interface_name"])
             if "out" in method:
