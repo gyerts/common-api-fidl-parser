@@ -103,3 +103,4 @@ ENV/
 # my app
 read_info.json
 .idea/
+output/

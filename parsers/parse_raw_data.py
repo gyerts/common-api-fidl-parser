@@ -1,8 +1,8 @@
 import re
 
 
-def _parse_raw_data():
-    with open("franca_fidl_files/HelloWorld.fidl") as f:
+def parse_raw_data(filename):
+    with open(filename) as f:
         dirty_raw_data = re.split(' |\n', f.read())
         dirty_raw_data = [el for el in dirty_raw_data if el != '']
 
@@ -15,30 +15,31 @@ def _parse_raw_data():
                     found_position = in_element.find(sign)
 
                     left = in_element[:found_position]
-                    right = in_element[found_position + 1:]
+                    center = in_element[found_position:found_position+len(sign)]
+                    right = in_element[found_position+len(sign):]
 
-                    if left:
-                        clean_raw_data.append(left)
+                    if left: clean_raw_data.append(left)
 
-                    clean_raw_data.append(sign)
+                    if center != sign: raise Exception("logic error: {} != {}".format(center, sign))
+                    else: clean_raw_data.append(sign)
+
+                    if right: clean_raw_data.append(right)
 
                     if sign in right:
                         add_if_sign(sign, right, recursively=True)
                     else:
                         if right: clean_raw_data.append(right)
+
                     added = True
                 elif recursively:
                     if in_element: clean_raw_data.append(in_element)
                 return added
 
-            if add_if_sign("{", clean_element):
-                continue
-            elif add_if_sign("}", clean_element):
-                continue
+            key_words_to_split = ["{", "}", "<**", "**>"]
+            for key_word_to_split in key_words_to_split:
+                if add_if_sign(key_word_to_split, clean_element):
+                    break
             else:
-                if clean_element: clean_raw_data.append(clean_element)
-
+                if "" != clean_element:
+                    clean_raw_data.append(clean_element)
         return clean_raw_data
-
-
-raw_data = _parse_raw_data()

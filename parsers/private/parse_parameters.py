@@ -1,3 +1,7 @@
+from parsers.private.parse_description import parse_description_from_start
+from parsers.helpers import is_description, pop_description, is_any_description
+
+
 def parse_in_or_out(raw_data: list, index_of_open_brace: int, in_or_out: str):
     if raw_data[index_of_open_brace] != "{":
         raise AttributeError("index_of_open_brace don't match '{' -> '{}' instead"
@@ -16,7 +20,12 @@ def parse_in_or_out(raw_data: list, index_of_open_brace: int, in_or_out: str):
 
     parameters = list()
 
-    for key_word in raw_data[index_of_open_brace:]:
+    skip = 0
+
+    catted_raw_data = raw_data[index_of_open_brace:]
+
+    for delta, key_word in enumerate(catted_raw_data):
+        if is_description(key_word): continue
 
         if key_word == "{":
             entries += 1
@@ -31,14 +40,17 @@ def parse_in_or_out(raw_data: list, index_of_open_brace: int, in_or_out: str):
 
         if ACTIVE_STATE == FIRST:
             MEMBER = dict()
-            MEMBER["list"] = False
+            if is_any_description():
+                MEMBER["description"] = " ".join(pop_description())
+
+            MEMBER["array"] = False
             NOT_ADDED = True
             MEMBER["type"] = key_word
-            ACTIVE_STATE += 1
+            ACTIVE_STATE = SECOND
 
         elif ACTIVE_STATE == SECOND:
             if key_word == "[]":
-                MEMBER["list"] = True
+                MEMBER["array"] = True
             else:
                 MEMBER["name"] = key_word
                 if NOT_ADDED:

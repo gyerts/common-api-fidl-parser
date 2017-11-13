@@ -277,4 +277,3 @@ interface E04PhoneBook {
         phoneBookDataElementEnum to phoneBookDataElement
     }
 }
-

@@ -1,0 +1,59 @@
+{% with %}
+{% set class_namespace_name = meta.interface_name+"ClientMock" %}
+{% set interface_name = "Interface"+class_namespace_name %}
+{% set class_name = "C"+class_namespace_name %}
+///////////////////////////////////////////////////////////////////////////////
+///
+/// Project          {{ settings.project_name }}
+/// Copyright (c)    2017
+/// Company          {{ settings.company }}
+///                  All rights reserved
+///
+////////////////////////////////////////////////////////////////////////////////
+/// @file            {{ class_name }}.hpp
+/// @authors         {{ settings.author }}
+/// @date            27.10.17
+///
+/// @brief           Declaration of class {{ class_name }}
+///
+////////////////////////////////////////////////////////////////////////////////
+
+#include <gmock/gmock.hpp>
+#include "{{ meta.interface_name }}.hpp"
+#include "{{ interface_name }}.hpp"
+
+
+namespace {{ settings.project_name }} {
+namespace Interfaces {
+namespace {{ class_namespace_name }} {
+
+
+/* ==========================================================================================
+ *                     MOCK INTERFACE
+ * ==========================================================================================
+ */
+class {{ class_name }} : public Interface{{ meta.interface_name }} {
+/* ==========================================================================================
+ *                     INFORMATIONS - CommonAPI "broadcast" handlers
+ * ==========================================================================================
+ */
+{% for broadcast in meta['broadcasts'] %}
+{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
+  METHOD0({{ broadcast_name }}, void());
+{% endfor %}
+
+/* ==========================================================================================
+ *                                          REQUESTS
+ * ==========================================================================================
+ */
+{% for method in meta['methods'] %}
+{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
+  METHOD0({{ method_name }}, void());
+{% endfor %}
+};
+
+
+}  // namespace {{ class_namespace_name }}
+}  // namespace Interfaces
+}  // namespace {{ settings.project_name }}
+{% endwith %}

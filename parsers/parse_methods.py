@@ -1,8 +1,13 @@
 from parsers.private.parse_parameters import parse_in_or_out
-from parsers.private.parse_description import parse_description
+from parsers.private.parse_description import parse_description_from_end
+from parsers.helpers import is_description
+
 
 def parse_methods(raw_data: list):
-    method_indexes = [index for index, key_word in enumerate(raw_data) if key_word == 'method']
+    method_indexes = []
+    for index, key_word in enumerate(raw_data):
+        if not is_description(key_word) and key_word == 'method':
+            method_indexes.append(index)
 
     methods = []
 
@@ -10,6 +15,7 @@ def parse_methods(raw_data: list):
         method = {
             "name": raw_data[method_index+1]
         }
+
         if raw_data[method_index+2] != "{":
             raise Exception("incorrect index of method start brace, but in this position "
                             "key word \"{}\"".format(raw_data[method_index+3]))
@@ -18,7 +24,11 @@ def parse_methods(raw_data: list):
         #                  PARSE IN/OUT/ERROR
         ########################################################
         entries = 0
-        for delta, key_word in enumerate(raw_data[method_index:]):
+        cut_raw_data = raw_data[method_index:]
+        for delta, key_word in enumerate(cut_raw_data):
+            if is_description(key_word, save=False):
+                continue
+
             if key_word == "{":
                 entries += 1
                 continue
@@ -37,8 +47,8 @@ def parse_methods(raw_data: list):
         ########################################################
         #                  PARSE DESCRIPTION
         ########################################################
-        if raw_data[method_index-1] == "**>":
-            method["description"] = parse_description(raw_data, method_index-1)
+        if "**>" in raw_data[method_index-1]:
+            method["description"] = " ".join(parse_description_from_end(raw_data, method_index - 1))
 
         methods.append(method)
     return methods
