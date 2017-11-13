@@ -1,0 +1,17 @@
+package hello.world
+
+interface HelloSlashN {
+   version {
+      major 2
+      minor 0
+   }
+
+
+   method setPresetItem {
+      in {
+	     UInt32 presetId
+      }
+   }
+
+
+}
