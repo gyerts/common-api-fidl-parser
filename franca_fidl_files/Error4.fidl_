@@ -1,0 +1,9 @@
+package hello.world
+
+interface Error4 {
+   version { major 1 minor 0 }
+   method error_metho {
+      in { Boolean param }
+      error param
+   }
+}
