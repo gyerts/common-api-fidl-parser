@@ -1,0 +1,16 @@
+package com.luxoft.mib3.Lifecycle
+
+interface Error1 {
+        version {major 1 minor 1}
+
+        method method1 {
+                in {
+                        String name //comment: "bla" /  comment: "bla" / comment: "bla (bla)"
+                }
+        }
+
+        /**
+         * comment comment
+         */
+        method method2{}
+}
