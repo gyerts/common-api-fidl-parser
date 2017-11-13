@@ -1,0 +1,16 @@
+package hello.world
+
+interface Hello {
+    version {
+        major 1
+        minor 0
+    }
+
+    method hello_world {
+        in {
+            // description description description description
+            UInt32 param1
+            UInt32 param2
+        }
+    }
+}
