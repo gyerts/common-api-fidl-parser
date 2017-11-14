@@ -7,11 +7,13 @@ def _replace(param: dict, namespace: str):
         param["type"] = "int16_t"
     elif param["type"] == "Int8":
         param["type"] = "int8_t"
+    elif param["type"] == "Boolean":
+        param["type"] = "bool"
     else:
         param["type"] = "{}::{}".format(namespace, param["type"])
 
 
-def generate_types(method: dict, namespace: str):
+def generate_method_types(method: dict, namespace: str):
     if "in" in method:
         for param in method["in"]:
             _replace(param, namespace)
@@ -21,3 +23,8 @@ def generate_types(method: dict, namespace: str):
     if "error" in method:
         for param in method["error"]:
             _replace(param, namespace)
+
+
+def generate_attributes_types(attributes: list, namespace: str):
+    for attribute in attributes:
+        _replace(attribute, namespace)

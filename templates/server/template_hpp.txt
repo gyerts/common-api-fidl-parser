@@ -1,8 +1,7 @@
 {% with %}
-{% set class_namespace_name = meta.interface_name+"Client" %}
+{% set class_namespace_name = meta.interface_name+"Server" %}
 {% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
-{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// Project          {{ settings.PROJECT_NAME }}
@@ -27,16 +26,11 @@
 
 #include <CommonAPI/CommonAPI.hpp>
 
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}DBusDeployment.hpp>
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}Proxy.hpp>
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}.hpp>
+#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}StubDefault.hpp>
 
-#include <src/common/Constants.hpp>
-#include <src/private/helpers/CommonAPIHelper.hpp>
-#include <src/private/helpers/Converters.hpp>
-#include "{{ interface_name }}.hpp";
+
 {% if settings.is_mock %}
-#include "C{{ meta.interface_name }}ClientMock.hpp";
+#include "C{{ meta.interface_name }}ServerMock.hpp";
 {% endif %}
 
 namespace {{ settings.project_name }} {
@@ -45,11 +39,11 @@ namespace {{ class_namespace_name }} {
 
 using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
 using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
-using {{ common_api_proxy }};
+using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}StubDefault;
 
 
 class {{ class_name }}
-  : public icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>
+  : public icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>
   , public Logger {
  public:
   /* ==========================================================================================
@@ -58,22 +52,13 @@ class {{ class_name }}
    */
 
   {{ class_name }}();
+  virtual ~{{ class_name }}();
 
 
   /* ==========================================================================================
    *                                       PUBLIC METHODS
    * ==========================================================================================
    */
-
-  /**
-   * This methods will be called when {{ meta.interface_name }} Stub will be available
-   */
-  void connected({{ meta.interface_name }}Proxy<>);
-
-  /**
-   * This method will be called when {{ meta.interface_name }} Stub will be unavailable
-   */
-  void disconnected({{ meta.interface_name }}Proxy<>);
 
 {% if settings.is_mock %}
   /**
@@ -82,109 +67,66 @@ class {{ class_name }}
   void setMock(std::weak_ptr<{{ interface_name }}> _mock);
 {% endif %}
 
+  void setCallbacks() override;
+
+
   /* ==========================================================================================
-   *                                          SUBSCRIPTION TYPES
+   *                                      ATTRIBUTE SETTERS
    * ==========================================================================================
    */
+{% for attribute in meta['attributes'] %}
+{% if attribute["description"] %}
 
-  /// Broadcast subscription types
-{% for broadcast in meta['broadcasts'] %}
-  CommonAPI::Event<>::Subscription subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_;
-{% endfor %}
-
-  /* ==========================================================================================
-   *                                          INFORMATIONS
-   * ==========================================================================================
+  /**
+   * {{ attribute["description"] }}
    */
-
-{% for broadcast in meta['broadcasts'] %}
-  void information{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}();
+{% endif %}
+  void set{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}Attribute({{ attribute["type"] }} _{{ attribute["name"] }}) override;
 {% endfor %}
 
 
   /* ==========================================================================================
-   *                                           RESPONSES
+   *                                       REQUEST HANDLERS
    * ==========================================================================================
    */
 
 {% for method in meta['methods'] %}
-
 {% if method["description"] %}
   /**
    * {{ method["description"] }}
    */
 {% endif %}
-  void response{{ method.name[0]|upper }}{{ method.name[1:] }}(
-{% if method["out"] %}
-      const CommonAPI::CallStatus &_callStatus,
+  void {{ method.name }}(
+{% if method["in"] %}
+    const std::shared_ptr<CommonAPI::ClientId> _client,
 {% else %}
-      const CommonAPI::CallStatus &_callStatus);
+    const std::shared_ptr<CommonAPI::ClientId> _client);
 {% endif %}
-{% for param in method["out"] %}
-  {% if loop.last %}
+{% for param in method["in"] %}
+{% if loop.last %}
     const {{ param.type }} &_{{ param.name }});
-  {% else %}
+{% else %}
     const {{ param.type }} &_{{ param.name }},
 {% endif %}
 {% endfor %}
 {% endfor %}
 
+
   /* ==========================================================================================
-   *                                          BROADCASTS
+   *                                    BROADCASTS WRAPPERS
    * ==========================================================================================
    */
-
 {% for broadcast in meta['broadcasts'] %}
+{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
 
   /**
    * {{ broadcast["description"] }}
    */
-{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
-{% set subscription = "subscription"+upper_name+"_" %}
-{% set information = "information"+upper_name %}
-{% set generatedCommonAPIEvent = "get"+upper_name+"Event()" %}
-  inline void notify{{ upper_name }}(const bool _isNotify) {
-    debug("%s __isNotify=%s", __func__, Converters::toString(_isNotify).c_str());
-    if (_isNotify) {
-      if (Const::kEmptySubscription == {{ subscription }}) {
-        const auto kCallback = std::bind(&{{ class_name|upper }}::{{ information }}, this);
-        {{ subscription }} = {{ generatedCommonAPIEvent }}.subscribe(kCallback);
-      }
-    } else {
-      if (Const::kEmptySubscription != {{ subscription }}) {
-        {{ generatedCommonAPIEvent }}.unsubscribe({{ subscription }});
-        {{ subscription }} = Const::kEmptySubscription;
-      }
-    }
-  }
+   void fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) override;
 {% endfor %}
-
-  /* ==========================================================================================
-   *                                          REQUESTS
-   * ==========================================================================================
-   */
-
-{% for method in meta['methods'] %}
-
-  /**
-   * {{ method["description"] }}
-   */
-{% set upper_name = method.name[0]|upper + method.name[1:] %}
-{% set CommonAPIAsyncCall = method["name"]+"Async" %}
-  std::future<CommonAPI::CallStatus> request{{ upper_name }}(
-{% for param in method["in"] %}
-{% if loop.last %}
-    const {{ param.type }} &_{{ param.name }}) {
-{% else %}
-    const {{ param.type }} &_{{ param.name }},
-{% endif %}{% endfor %}
-    debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});
-    const auto kCallback = std::bind(&{{ class_name }}::response{{ upper_name }}, this{{ method.out_placeholders }});
-    return {{ CommonAPIAsyncCall }}({{ method.in_params }}kCallback);
-  }
-{% endfor %}
-
 {% if settings.is_mock %}
+
+
  private:
   /* ==========================================================================================
    *                                      PRIVATE MEMBERS
@@ -193,6 +135,23 @@ class {{ class_name }}
   std::weak_ptr<{{ interface_name }}> mock_;
 {% endif %}
 };
+
+  /* ==========================================================================================
+   *                                    BROADCASTS WRAPPERS
+   * ==========================================================================================
+   */
+{% for broadcast in meta['broadcasts'] %}
+{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
+
+/**
+ * {{ broadcast["description"] }}
+ */
+inline
+void {{ class_name }}::fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) {
+  debug("%s{{ broadcast.out_debug_left }}", __func__{{ broadcast.out_debug_right }});
+  {{ class_name }}::fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}_{{ param.name }}{% else %}_{{ param.name }}, {% endif %}{% endfor %});
+}
+{% endfor %}
 
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
