@@ -2,15 +2,18 @@ from jinja2 import Environment, FileSystemLoader
 import os
 from configurations import settings
 
-# Capture our current directory
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+j2_env = None
+
+
+def set_template_dir(directory: str):
+    global j2_env
+    j2_env = Environment(loader=FileSystemLoader(directory), trim_blocks=True)
 
 
 def generate_file(meta: dict, filename: str, template_name: str):
     # Create the jinja2 environment.
     # Notice the use of trim_blocks, which greatly helps control whitespace.
-    j2_env = Environment(loader=FileSystemLoader(THIS_DIR),
-                         trim_blocks=True)
+    global j2_env
 
     all = {
         "meta": meta,

@@ -1,7 +1,7 @@
 {% with %}
-{% set class_namespace_name = meta.interface_name+"ClientMock" %}
+{% set class_namespace_name = meta.interface_name+"Client" %}
 {% set interface_name = "Interface"+class_namespace_name %}
-{% set class_name = "C"+class_namespace_name %}
+{% set class_name = "Interface"+class_namespace_name %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// Project          {{ settings.project_name }}
@@ -18,9 +18,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <gmock/gmock.hpp>
 #include "{{ meta.interface_name }}.hpp"
-#include "{{ interface_name }}.hpp"
 
 
 namespace {{ settings.project_name }} {
@@ -29,17 +27,17 @@ namespace {{ class_namespace_name }} {
 
 
 /* ==========================================================================================
- *                     MOCK INTERFACE
+ *                     {{ class_name|upper }} INTERFACE
  * ==========================================================================================
  */
-class {{ class_name }} : public Interface{{ meta.interface_name }} {
+class {{ class_name }} {
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
  */
 {% for broadcast in meta['broadcasts'] %}
 {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
-  METHOD0({{ broadcast_name }}, void());
+  virtual void {{ broadcast_name }}() = 0;
 {% endfor %}
 
 /* ==========================================================================================
@@ -48,7 +46,7 @@ class {{ class_name }} : public Interface{{ meta.interface_name }} {
  */
 {% for method in meta['methods'] %}
 {% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
-  METHOD0({{ method_name }}, void());
+  virtual void {{ method_name }}() = 0;
 {% endfor %}
 };
 

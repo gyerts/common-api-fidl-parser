@@ -2,6 +2,7 @@
 {% set class_namespace_name = meta.interface_name+"Client" %}
 {% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
+{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// Project          {{ settings.project_name }}
@@ -18,14 +19,13 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "{{ meta.interface_name }}.hpp"
+#include "C{{ meta.interface_name }}Client.hpp"
 #include <helpers/UserManagerConverters.hpp>
 
 
 namespace {{ settings.project_name }} {
 namespace Interfaces {
 namespace {{ class_namespace_name }} {
-
 
 /* ==========================================================================================
  *                     C-TORS / D-TORS / OPERATORS
@@ -36,8 +36,9 @@ namespace {{ class_namespace_name }} {
  * @param _delegate this is CommonAPI::Proxy object, which will handle all requests
  *                    broadcasts after specific execution of {{ class_name }}
  */
-{{ class_name }}::{{ class_name }}(std::shared_ptr<CommonAPI::Proxy> _delegate)
-  : v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}ProxyDefault(_delegate), Logger("{{ class_name }}")
+{{ class_name }}::{{ class_name }}()
+  : icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>("local", {{ meta.interface_name }}::getInterface())
+  , Logger("[{{ class_name }}]")
 {% for broadcast in meta['broadcasts'] %}
 {% if loop.last %}
   , {{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_(Const::kEmptySubscription) {

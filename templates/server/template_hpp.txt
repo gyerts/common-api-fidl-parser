@@ -1,0 +1,202 @@
+{% with %}
+{% set class_namespace_name = meta.interface_name+"Client" %}
+{% set interface_name = "Interface"+class_namespace_name %}
+{% set class_name = "C"+class_namespace_name %}
+{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
+///////////////////////////////////////////////////////////////////////////////
+///
+/// Project          {{ settings.PROJECT_NAME }}
+/// Copyright (c)    2017
+/// Company          {{ settings.COMPANY }}
+///                  All rights reserved
+///
+////////////////////////////////////////////////////////////////////////////////
+/// @file            {{ class_name }}.hpp
+/// @authors         {{ settings.AUTHOR }}
+/// @date            27.10.17
+///
+/// @brief           Declaration of class {{ class_name }}
+///
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef {{ class_name|upper }}_HPP_
+#define {{ class_name|upper }}_HPP_
+
+#include <memory>
+#include <string>
+
+#include <CommonAPI/CommonAPI.hpp>
+
+#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}DBusDeployment.hpp>
+#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}Proxy.hpp>
+#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}.hpp>
+
+#include <src/common/Constants.hpp>
+#include <src/private/helpers/CommonAPIHelper.hpp>
+#include <src/private/helpers/Converters.hpp>
+#include "{{ interface_name }}.hpp";
+{% if settings.is_mock %}
+#include "C{{ meta.interface_name }}ClientMock.hpp";
+{% endif %}
+
+namespace {{ settings.project_name }} {
+namespace Interfaces {
+namespace {{ class_namespace_name }} {
+
+using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
+using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
+using {{ common_api_proxy }};
+
+
+class {{ class_name }}
+  : public icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>
+  , public Logger {
+ public:
+  /* ==========================================================================================
+   *                                      C-TORS / D-TORS
+   * ==========================================================================================
+   */
+
+  {{ class_name }}();
+
+
+  /* ==========================================================================================
+   *                                       PUBLIC METHODS
+   * ==========================================================================================
+   */
+
+  /**
+   * This methods will be called when {{ meta.interface_name }} Stub will be available
+   */
+  void connected({{ meta.interface_name }}Proxy<>);
+
+  /**
+   * This method will be called when {{ meta.interface_name }} Stub will be unavailable
+   */
+  void disconnected({{ meta.interface_name }}Proxy<>);
+
+{% if settings.is_mock %}
+  /**
+   * On start of tests here should be set Strict or Nice Mocks for test purpose
+   */
+  void setMock(std::weak_ptr<{{ interface_name }}> _mock);
+{% endif %}
+
+  /* ==========================================================================================
+   *                                          SUBSCRIPTION TYPES
+   * ==========================================================================================
+   */
+
+  /// Broadcast subscription types
+{% for broadcast in meta['broadcasts'] %}
+  CommonAPI::Event<>::Subscription subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_;
+{% endfor %}
+
+  /* ==========================================================================================
+   *                                          INFORMATIONS
+   * ==========================================================================================
+   */
+
+{% for broadcast in meta['broadcasts'] %}
+  void information{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}();
+{% endfor %}
+
+
+  /* ==========================================================================================
+   *                                           RESPONSES
+   * ==========================================================================================
+   */
+
+{% for method in meta['methods'] %}
+
+{% if method["description"] %}
+  /**
+   * {{ method["description"] }}
+   */
+{% endif %}
+  void response{{ method.name[0]|upper }}{{ method.name[1:] }}(
+{% if method["out"] %}
+      const CommonAPI::CallStatus &_callStatus,
+{% else %}
+      const CommonAPI::CallStatus &_callStatus);
+{% endif %}
+{% for param in method["out"] %}
+  {% if loop.last %}
+    const {{ param.type }} &_{{ param.name }});
+  {% else %}
+    const {{ param.type }} &_{{ param.name }},
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+  /* ==========================================================================================
+   *                                          BROADCASTS
+   * ==========================================================================================
+   */
+
+{% for broadcast in meta['broadcasts'] %}
+
+  /**
+   * {{ broadcast["description"] }}
+   */
+{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
+{% set subscription = "subscription"+upper_name+"_" %}
+{% set information = "information"+upper_name %}
+{% set generatedCommonAPIEvent = "get"+upper_name+"Event()" %}
+  inline void notify{{ upper_name }}(const bool _isNotify) {
+    debug("%s __isNotify=%s", __func__, Converters::toString(_isNotify).c_str());
+    if (_isNotify) {
+      if (Const::kEmptySubscription == {{ subscription }}) {
+        const auto kCallback = std::bind(&{{ class_name|upper }}::{{ information }}, this);
+        {{ subscription }} = {{ generatedCommonAPIEvent }}.subscribe(kCallback);
+      }
+    } else {
+      if (Const::kEmptySubscription != {{ subscription }}) {
+        {{ generatedCommonAPIEvent }}.unsubscribe({{ subscription }});
+        {{ subscription }} = Const::kEmptySubscription;
+      }
+    }
+  }
+{% endfor %}
+
+  /* ==========================================================================================
+   *                                          REQUESTS
+   * ==========================================================================================
+   */
+
+{% for method in meta['methods'] %}
+
+  /**
+   * {{ method["description"] }}
+   */
+{% set upper_name = method.name[0]|upper + method.name[1:] %}
+{% set CommonAPIAsyncCall = method["name"]+"Async" %}
+  std::future<CommonAPI::CallStatus> request{{ upper_name }}(
+{% for param in method["in"] %}
+{% if loop.last %}
+    const {{ param.type }} &_{{ param.name }}) {
+{% else %}
+    const {{ param.type }} &_{{ param.name }},
+{% endif %}{% endfor %}
+    debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});
+    const auto kCallback = std::bind(&{{ class_name }}::response{{ upper_name }}, this{{ method.out_placeholders }});
+    return {{ CommonAPIAsyncCall }}({{ method.in_params }}kCallback);
+  }
+{% endfor %}
+
+{% if settings.is_mock %}
+ private:
+  /* ==========================================================================================
+   *                                      PRIVATE MEMBERS
+   * ==========================================================================================
+   */
+  std::weak_ptr<{{ interface_name }}> mock_;
+{% endif %}
+};
+
+}  // namespace {{ class_namespace_name }}
+}  // namespace Interfaces
+}  // namespace {{ settings.project_name }}
+
+#endif  // {{ class_name|upper }}_HPP_
+{% endwith %}

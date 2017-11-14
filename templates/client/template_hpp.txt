@@ -2,6 +2,7 @@
 {% set class_namespace_name = meta.interface_name+"Client" %}
 {% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
+{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// Project          {{ settings.PROJECT_NAME }}
@@ -35,7 +36,7 @@
 #include <src/private/helpers/Converters.hpp>
 #include "{{ interface_name }}.hpp";
 {% if settings.is_mock %}
-#include "{{ meta.interface_name }}Mock.hpp";
+#include "C{{ meta.interface_name }}ClientMock.hpp";
 {% endif %}
 
 namespace {{ settings.project_name }} {
@@ -43,12 +44,12 @@ namespace Interfaces {
 namespace {{ class_namespace_name }} {
 
 using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
-using {{ meta.interface_name }} = v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
+using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
+using {{ common_api_proxy }};
 
 
 class {{ class_name }}
-  : public v1::{{ meta.generated_namespace }}::{{ meta.filename }}ProxyDefault
-  , public CommonAPIHelper::IClientBase
+  : public icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>
   , public Logger {
  public:
   /* ==========================================================================================
@@ -56,11 +57,7 @@ class {{ class_name }}
    * ==========================================================================================
    */
 
-  /**
-   * @param _delegate this is CommonAPI::Proxy object, which will handle all requests
-   *                    broadcasts after specific execution of {{ class_name }}
-   */
-  explicit {{ class_name }}(std::shared_ptr<CommonAPI::Proxy> _delegate);
+  {{ class_name }}();
 
 
   /* ==========================================================================================
@@ -69,14 +66,14 @@ class {{ class_name }}
    */
 
   /**
-   * This methods will be called when {{ meta.filename }} Stub will be available
+   * This methods will be called when {{ meta.interface_name }} Stub will be available
    */
-  void connected();
+  void connected({{ meta.interface_name }}Proxy<>);
 
   /**
-   * This method will be called when {{ meta.filename }} Stub will be unavailable
+   * This method will be called when {{ meta.interface_name }} Stub will be unavailable
    */
-  void disconnected();
+  void disconnected({{ meta.interface_name }}Proxy<>);
 
 {% if settings.is_mock %}
   /**

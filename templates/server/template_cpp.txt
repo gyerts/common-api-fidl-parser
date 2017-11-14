@@ -1,0 +1,147 @@
+{% with %}
+{% set class_namespace_name = meta.interface_name+"Client" %}
+{% set interface_name = "Interface"+class_namespace_name %}
+{% set class_name = "C"+class_namespace_name %}
+{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
+///////////////////////////////////////////////////////////////////////////////
+///
+/// Project          {{ settings.project_name }}
+/// Copyright (c)    2017
+/// Company          {{ settings.company }}
+///                  All rights reserved
+///
+////////////////////////////////////////////////////////////////////////////////
+/// @file            {{ class_name }}.hpp
+/// @authors         {{ settings.author }}
+/// @date            27.10.17
+///
+/// @brief           Declaration of class {{ class_name }}
+///
+////////////////////////////////////////////////////////////////////////////////
+
+#include "C{{ meta.interface_name }}Client.hpp"
+#include <helpers/UserManagerConverters.hpp>
+
+
+namespace {{ settings.project_name }} {
+namespace Interfaces {
+namespace {{ class_namespace_name }} {
+
+/* ==========================================================================================
+ *                     C-TORS / D-TORS / OPERATORS
+ * ==========================================================================================
+ */
+
+/**
+ * @param _delegate this is CommonAPI::Proxy object, which will handle all requests
+ *                    broadcasts after specific execution of {{ class_name }}
+ */
+{{ class_name }}::{{ class_name }}()
+  : icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>("local", {{ meta.interface_name }}::getInterface())
+  , Logger("[{{ class_name }}]")
+{% for broadcast in meta['broadcasts'] %}
+{% if loop.last %}
+  , {{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_(Const::kEmptySubscription) {
+{% else %}
+  , {{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_(Const::kEmptySubscription)
+{% endif %}
+{% endfor %}
+  debug("%s: Constructor", __func__);
+}
+
+
+/* ==========================================================================================
+ *                     Connection and Disconnection handlers
+ * ==========================================================================================
+ */
+
+/**
+ * This methods will be called when {{ class_name }} Stub will be available
+ */
+void {{ class_name }}::connected() {
+{% for broadcast in meta['broadcasts'] %}
+  notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(true);
+{% endfor %}
+}
+
+/**
+ * This method will be called when {{ class_name }} Stub will be unavailable
+ */
+void {{ class_name }}::disconnected() {
+{% for broadcast in meta['broadcasts'] %}
+  notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(false);
+{% endfor %}
+}
+
+
+/* ==========================================================================================
+ *                     INFORMATIONS - CommonAPI "broadcast" handlers
+ * ==========================================================================================
+ */
+
+{% for broadcast in meta['broadcasts'] %}
+
+{% if broadcast["description"] %}
+/**
+ * {{ broadcast["description"] }}
+ */
+{% endif %}
+{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
+{{ class_name }}::{{ broadcast_name }}() {
+  debug("%s", __func__);
+{% if settings.is_mock %}
+  if (auto mock = mock_.lock()) {
+    debug("[{{ class_name|upper }}][CLIENT][  OK ] %s, call mock->mock_{{ broadcast_name }}", __func__);
+    mock->mock_{{ broadcast_name }}();
+  } else {
+    error("[{{ class_name|upper }}][CLIENT][ERROR] %s, call mock failed, mock_ is not initialized", __func__);
+  }
+{% endif %}
+}
+{% endfor %}
+
+
+/* ==========================================================================================
+ *                      RESPONSES - CommonAPI "request" handlers
+ * ==========================================================================================
+ */
+
+{% for method in meta['methods'] %}
+
+{% if method["description"] %}
+/**
+ * {{ method["description"] }}
+ */
+{% endif %}
+{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
+void {{ class_name }}::{{ method_name }}(
+  const CommonAPI::CallStatus &_callStatus,
+{% for param in method["out"] %}
+{% if loop.last %}
+  const {{ param.type }} &_{{ param.name }}) {
+{% else %}
+  const {{ param.type }} &_{{ param.name }},
+{% endif %}
+{% endfor %}
+  debug("%s{{ method.out_debug_left }}", __func__{{ method.out_debug_right }});
+{% if settings.is_mock %}
+  if (auto mock = mock_.lock()) {
+    debug("[{{ class_name|upper }}][CLIENT][  OK ] %s, call mock->mock_{{ method_name }}", __func__);
+    mock->mock_{{ method_name }}();
+  } else {
+    error("[{{ class_name|upper }}][CLIENT][ERROR] %s, call mock failed, mock_ is not initialized", __func__);
+  }
+{% endif %}
+}
+{% endfor %}
+
+{% if settings.is_mock %}
+void {{ class_name }}::setMock(std::weak_ptr<{{ interface_name }}> _mock) {
+  mock_ = _mock;
+}
+{% endif %}
+
+}  // namespace {{ class_namespace_name }}
+}  // namespace Interfaces
+}  // namespace {{ settings.project_name }}
+{% endwith %}
