@@ -18,7 +18,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "{{ meta.interface_name }}.hpp"
+#ifndef {{ class_name|upper }}_HPP_
+#define {{ class_name|upper }}_HPP_
+
+#include "C{{ meta.interface_name }}Client.hpp"
 
 
 namespace {{ settings.project_name }} {
@@ -30,14 +33,15 @@ namespace {{ class_namespace_name }} {
  *                     {{ class_name|upper }} INTERFACE
  * ==========================================================================================
  */
-class {{ class_name }} {
+struct {{ class_name }} {
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
  */
+  virtual ~{{ class_name }}() {}
 {% for broadcast in meta['broadcasts'] %}
 {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
-  virtual void {{ broadcast_name }}() = 0;
+  virtual void mock_{{ broadcast_name }}() = 0;
 {% endfor %}
 
 /* ==========================================================================================
@@ -46,7 +50,7 @@ class {{ class_name }} {
  */
 {% for method in meta['methods'] %}
 {% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
-  virtual void {{ method_name }}() = 0;
+  virtual void mock_{{ method_name }}() = 0;
 {% endfor %}
 };
 
@@ -54,4 +58,7 @@ class {{ class_name }} {
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}
+
+#endif  // {{ class_name|upper }}_HPP_
+
 {% endwith %}

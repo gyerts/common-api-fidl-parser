@@ -1,6 +1,6 @@
 {% with %}
 {% set class_namespace_name = meta.interface_name+"ClientMock" %}
-{% set interface_name = "Interface"+class_namespace_name %}
+{% set gen_interface_name = "Interface"+meta.interface_name+"Client" %}
 {% set class_name = "C"+class_namespace_name %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
@@ -18,9 +18,12 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <gmock/gmock.hpp>
+#ifndef {{ class_name|upper }}_HPP_
+#define {{ class_name|upper }}_HPP_
+
+#include <gmock/gmock.h>
 #include "C{{ meta.interface_name }}Client.hpp"
-#include "C{{ interface_name }}.hpp"
+#include "{{ gen_interface_name }}.hpp"
 
 
 namespace {{ settings.project_name }} {
@@ -32,14 +35,14 @@ namespace {{ class_namespace_name }} {
  *                     MOCK INTERFACE
  * ==========================================================================================
  */
-class {{ class_name }} : public Interface{{ meta.interface_name }} {
+class {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interface_name }} {
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
  */
 {% for broadcast in meta['broadcasts'] %}
 {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
-  METHOD0({{ broadcast_name }}, void());
+  MOCK_METHOD0({{ broadcast_name }}, void());
 {% endfor %}
 
 /* ==========================================================================================
@@ -48,7 +51,7 @@ class {{ class_name }} : public Interface{{ meta.interface_name }} {
  */
 {% for method in meta['methods'] %}
 {% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
-  METHOD0({{ method_name }}, void());
+  MOCK_METHOD0({{ method_name }}, void());
 {% endfor %}
 };
 
@@ -56,4 +59,5 @@ class {{ class_name }} : public Interface{{ meta.interface_name }} {
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}
+#endif  // {{ class_name|upper }}_HPP_
 {% endwith %}

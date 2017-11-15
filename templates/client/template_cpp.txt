@@ -20,7 +20,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "C{{ meta.interface_name }}Client.hpp"
-#include <helpers/UserManagerConverters.hpp>
 
 
 namespace {{ settings.project_name }} {
@@ -41,9 +40,9 @@ namespace {{ class_namespace_name }} {
   , Logger("[{{ class_name }}]")
 {% for broadcast in meta['broadcasts'] %}
 {% if loop.last %}
-  , {{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_(Const::kEmptySubscription) {
+  , subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_({{ settings.project_name }}Const::kEmptySubscription) {
 {% else %}
-  , {{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_(Const::kEmptySubscription)
+  , subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_({{ settings.project_name }}Const::kEmptySubscription)
 {% endif %}
 {% endfor %}
   debug("%s: Constructor", __func__);
@@ -58,7 +57,7 @@ namespace {{ class_namespace_name }} {
 /**
  * This methods will be called when {{ class_name }} Stub will be available
  */
-void {{ class_name }}::connected() {
+void {{ class_name }}::connected({{ meta.interface_name }}Proxy<>&) {
 {% for broadcast in meta['broadcasts'] %}
   notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(true);
 {% endfor %}
@@ -67,7 +66,7 @@ void {{ class_name }}::connected() {
 /**
  * This method will be called when {{ class_name }} Stub will be unavailable
  */
-void {{ class_name }}::disconnected() {
+void {{ class_name }}::disconnected({{ meta.interface_name }}Proxy<>&) {
 {% for broadcast in meta['broadcasts'] %}
   notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(false);
 {% endfor %}
@@ -86,7 +85,7 @@ void {{ class_name }}::disconnected() {
  * {{ broadcast["description"] }}
  */
 {% endif %}
-{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
+void {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
 {{ class_name }}::{{ broadcast_name }}() {
   debug("%s", __func__);
 {% if settings.is_mock %}
