@@ -102,7 +102,11 @@ namespace {{ class_namespace_name }} {
 {% if method["in"] %}
     const std::shared_ptr<CommonAPI::ClientId> _client,
 {% else %}
+{% if method.fireAndForget %}
     const std::shared_ptr<CommonAPI::ClientId> _client) {
+{% else %}
+    const std::shared_ptr<CommonAPI::ClientId> _client,
+{% endif %}
 {% endif %}
 {% for param in method["in"] %}
 {% if loop.last and method.fireAndForget %}
@@ -110,10 +114,10 @@ namespace {{ class_namespace_name }} {
 {% else %}
     const {{ param.type }} _{{ param.name }},
 {% endif %}
-{% if not method.fireAndForget %}
-    UsermanagerToHMIStub::{{ reply_param }}) {
-{% endif %}
 {% endfor %}
+{% if not method.fireAndForget %}
+    {{ meta.interface_name }}Stub::{{ reply_param }}) {
+{% endif %}
     debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});
   }
 {% endfor %}

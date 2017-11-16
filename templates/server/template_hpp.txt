@@ -119,7 +119,11 @@ class {{ class_name }}
 {% if method["in"] %}
     const std::shared_ptr<CommonAPI::ClientId> _client,
 {% else %}
+{% if method.fireAndForget %}
     const std::shared_ptr<CommonAPI::ClientId> _client) override;
+{% else %}
+    const std::shared_ptr<CommonAPI::ClientId> _client,
+{% endif %}
 {% endif %}
 {% for param in method["in"] %}
 {% if loop.last and method.fireAndForget %}
@@ -127,8 +131,8 @@ class {{ class_name }}
 {% else %}
     const {{ param.type }} _{{ param.name }},
 {% endif %}
-{% if not method.fireAndForget %}    UsermanagerToHMIStub::{{ reply_param }}) override;{% endif %}
 {% endfor %}
+{% if not method.fireAndForget %}    {{ meta.interface_name }}Stub::{{ reply_param }}) override;{% endif %}
 {% endfor %}
 
 
