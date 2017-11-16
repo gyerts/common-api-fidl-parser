@@ -61,6 +61,54 @@ namespace {{ class_namespace_name }} {
 {% endfor %}
   }
 
+
+  /* ==========================================================================================
+   *                                      ATTRIBUTE SETTERS
+   * ==========================================================================================
+   */
+{% for attribute in meta['attributes'] %}
+{% set attribute_name = "set"+attribute.name[0]|upper+attribute.name[1:]+"Attribute" %}
+{% if attribute["description"] %}
+
+  /**
+   * {{ attribute["description"] }}
+   */
+{% endif %}
+  void {{ class_name }}::{{ attribute_name }}({{ attribute["type"] }} _{{ attribute["name"] }}) {
+    debug("%s{{ attribute.in_debug_left }}", __func__{{ attribute.in_debug_right }});
+    {{ meta.interface_name }}StubDefault::{{ attribute_name }}(_{{ attribute["name"] }});
+  }
+{% endfor %}
+
+
+  /* ==========================================================================================
+   *                                       REQUEST HANDLERS
+   * ==========================================================================================
+   */
+
+{% for method in meta['methods'] %}
+{% if method["description"] %}
+  /**
+   * {{ method["description"] }}
+   */
+{% endif %}
+  void {{ class_name }}::{{ method.name }}(
+{% if method["in"] %}
+    const std::shared_ptr<CommonAPI::ClientId> _client,
+{% else %}
+    const std::shared_ptr<CommonAPI::ClientId> _client) {
+{% endif %}
+{% for param in method["in"] %}
+{% if loop.last %}
+    const {{ param.type }} _{{ param.name }}) {
+{% else %}
+    const {{ param.type }} _{{ param.name }},
+{% endif %}
+{% endfor %}
+    debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});
+  }
+{% endfor %}
+
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}
