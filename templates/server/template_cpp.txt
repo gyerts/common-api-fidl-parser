@@ -23,7 +23,9 @@ namespace {{ class_namespace_name }} {
     : icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>()
     , Logger("[{{ class_name }}]") {
     debug("%s: Construct", __func__);
+{% if generate_callbacks %}
     setCallbacks();
+{% endif %}
   }
 
   {{ class_name }}::~{{ class_name }}() {
@@ -44,6 +46,7 @@ namespace {{ class_namespace_name }} {
     mock_ = _mock;
   }
 {% endif %}
+{% if generate_callbacks %}
 
   void {{ class_name }}::setCallbacks() {
     namespace Helper = WLanNetworking::Common::CallbackHelper;
@@ -60,6 +63,7 @@ namespace {{ class_namespace_name }} {
     set("set_{{ attribute["snake_name"] }}", Helper::plainCall(this, &{{ class_name }}::{{ attribute_name }}));
 {% endfor %}
   }
+{% endif %}
 
 
   /* ==========================================================================================
