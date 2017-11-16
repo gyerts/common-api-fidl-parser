@@ -73,6 +73,8 @@ for file_path in all_files:
                 method["out_params_placeholders_nr"] = generate_params_placeholders_nr(method["out"])
                 method["out_debug_left"] = generate_debug_left(method["out"])
                 method["out_debug_right"] = generate_debug_right(method["out"])
+                # CamelCase to snake_case
+                method["snake_name"] = convert_camelcase_to_snake_case(method["name"])
 
             if "in" in method:
                 # add str "const std::string &_s1, const std::string &_s2"
@@ -95,6 +97,8 @@ for file_path in all_files:
                 method["in_params_placeholders_nr"] = generate_params_placeholders_nr(method["in"])
                 method["in_debug_left"] = generate_debug_left(method["in"])
                 method["in_debug_right"] = generate_debug_right(method["in"])
+                # CamelCase to snake_case
+                method["snake_name"] = convert_camelcase_to_snake_case(method["name"])
 
         for broadcast in interface_content["broadcasts"]:
             generate_method_types(broadcast, all["interface_name"])
@@ -119,25 +123,30 @@ for file_path in all_files:
                 broadcast["out_params_placeholders_nr"] = generate_params_placeholders_nr(broadcast["out"])
                 broadcast["out_debug_left"] = generate_debug_left(broadcast["out"])
                 broadcast["out_debug_right"] = generate_debug_right(broadcast["out"])
+                # CamelCase to snake_case
+                broadcast["snake_name"] = convert_camelcase_to_snake_case(broadcast["name"])
+
+            for attribute in interface_content["attributes"]:
+                generate_method_types(attribute, all["interface_name"])
+                attribute["snake_name"] = convert_camelcase_to_snake_case(attribute["name"])
 
         ##################################################################################################
         # Generate Client
         ##################################################################################################
-        generate_file(all, "C"+all["interface_name"]+"Client.hpp", "templates/client/template_hpp.txt")
-        generate_file(all, "C"+all["interface_name"]+"Client.cpp", "templates/client/template_cpp.txt")
-        if settings["is_mock"]:
-            generate_file(all, "C"+all["interface_name"]+"ClientMock.hpp", "templates/client/template_mock_hpp.txt")
-            generate_file(all, "Interface"+all["interface_name"]+"Client.hpp", "templates/client/template_interface_hpp.txt")
+        # generate_file(all, "C"+all["interface_name"]+"Client.hpp", "templates/client/template_hpp.txt")
+        # generate_file(all, "C"+all["interface_name"]+"Client.cpp", "templates/client/template_cpp.txt")
+        # if settings["is_mock"]:
+        #     generate_file(all, "C"+all["interface_name"]+"ClientMock.hpp", "templates/client/template_mock_hpp.txt")
+        #     generate_file(all, "Interface"+all["interface_name"]+"Client.hpp", "templates/client/template_interface_hpp.txt")
 
         ##################################################################################################
         # Generate Server
         ##################################################################################################
-        # generate_file(all, "C" + all["interface_name"] + "Server.hpp", "templates/server/template_hpp.txt")
-        # generate_file(all, "C" + all["interface_name"] + "Server.cpp", "templates/server/template_cpp.txt")
-        # if settings["is_mock"]:
-        #     generate_file(all, "C" + all["interface_name"] + "ServerMock.hpp", "templates/server/template_mock_hpp.txt")
-        #     generate_file(all, "Interface" + all["interface_name"] + "Server.hpp",
-        #                   "templates/server/template_interface_hpp.txt")
+        generate_file(all, "C" + all["interface_name"] + "Server.hpp", "templates/server/template_hpp.txt")
+        generate_file(all, "C" + all["interface_name"] + "Server.cpp", "templates/server/template_cpp.txt")
+        if settings["is_mock"]:
+            generate_file(all, "C" + all["interface_name"] + "ServerMock.hpp", "templates/server/template_mock_hpp.txt")
+            generate_file(all, "Interface" + all["interface_name"] + "Server.hpp", "templates/server/template_interface_hpp.txt")
 
         ##################################################################################################
         # write to json file read_info.json

@@ -1,3 +1,6 @@
+import re
+
+
 def generate_debug_left(params: list):
     output = str()
     for param in params:
@@ -125,3 +128,9 @@ def generate_params_placeholders_nb(params: list):
             else:
                 output += ", std::placeholders::_{index}".format(index=index+2)
     return output
+
+
+## TODO: better replace with using "inflection.underscore('CamelCase')" library
+def convert_camelcase_to_snake_case(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

@@ -1,109 +1,34 @@
 {% with %}
 {% set class_namespace_name = meta.interface_name+"Server" %}
-{% set common_api_interface_name = "Interface"+class_namespace_name %}
+{% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
-///////////////////////////////////////////////////////////////////////////////
-///
-/// Project          {{ settings.PROJECT_NAME }}
-/// Copyright (c)    2017
-/// Company          {{ settings.COMPANY }}
-///                  All rights reserved
-///
-////////////////////////////////////////////////////////////////////////////////
-/// @file            {{ class_name }}.hpp
-/// @authors         {{ settings.AUTHOR }}
-/// @date            27.10.17
-///
-/// @brief           Declaration of class {{ class_name }}
-///
-////////////////////////////////////////////////////////////////////////////////
-
-#ifndef {{ class_name|upper }}_HPP_
-#define {{ class_name|upper }}_HPP_
-
 #include <memory>
 #include <string>
 
-#include <CommonAPI/CommonAPI.hpp>
-
 #include "{{ class_name }}.hpp"
-
-
 {% if settings.is_mock %}
-#include "{{ common_api_interface_name }}.hpp";
+#include "Interface{{ meta.interface_name }}Server.hpp"
 {% endif %}
 
 namespace {{ settings.project_name }} {
 namespace Interfaces {
 namespace {{ class_namespace_name }} {
 
-
-/* ==========================================================================================
- *                                      C-TORS / D-TORS
- * ==========================================================================================
- */
-
-{{ class_name }}::{{ class_name }}()
-  : icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>()
-  , Logger("[{{ class_name }}]") {
-  debug("%s: Construct", __func__);
-  setCallbacks();
-}
-
-{{ class_name }}::~{{ class_name }}() {
-  debug("%s: Destruct", __func__);
-}
-
-/* ==========================================================================================
- *                                      ATTRIBUTE SETTERS
- * ==========================================================================================
- */
-{% for attribute in meta['attributes'] %}
-{% if attribute["description"] %}
-
-  /**
-   * {{ attribute["description"] }}
+  /* ==========================================================================================
+   *                                      C-TORS / D-TORS
+   * ==========================================================================================
    */
-{% endif %}
-  void set{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}Attribute({{ attribute["type"] }} _{{ attribute["name"] }}) {
-{% endfor %}
-void CUsermanagerToHMIServer::setUserListAttribute(UsermanagerToHMI::tUserList _userList) {
-  debug("%s: _userList is %s", __func__, toString(_userList).c_str());
-  IUsermanagerToHMIStubDefault::setUserListAttribute(_userList);
-}
 
-
-{% for method in meta['methods'] %}
-
-{% if method["description"] %}
-/**
- * {{ method["description"] }}
- */
-{% endif %}
-{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
-void {{ class_name }}::{{ method_name }}(
-  const CommonAPI::CallStatus &_callStatus,
-{% for param in method["out"] %}
-{% if loop.last %}
-  const {{ param.type }} &_{{ param.name }}) {
-{% else %}
-  const {{ param.type }} &_{{ param.name }},
-{% endif %}
-{% endfor %}
-  debug("%s{{ method.out_debug_left }}", __func__{{ method.out_debug_right }});
-{% if settings.is_mock %}
-  if (auto mock = mock_.lock()) {
-    debug("[{{ class_name|upper }}][CLIENT][  OK ] %s, call mock->mock_{{ method_name }}", __func__);
-    mock->mock_{{ method_name }}();
-  } else {
-    error("[{{ class_name|upper }}][CLIENT][ERROR] %s, call mock failed, mock_ is not initialized", __func__);
+  {{ class_name }}::{{ class_name }}()
+    : icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>()
+    , Logger("[{{ class_name }}]") {
+    debug("%s: Construct", __func__);
+    setCallbacks();
   }
-{% endif %}
-}
-{% endfor %}
 
-
-
+  {{ class_name }}::~{{ class_name }}() {
+    debug("%s: Destruct", __func__);
+  }
 
 
   /* ==========================================================================================
@@ -115,98 +40,28 @@ void {{ class_name }}::{{ method_name }}(
   /**
    * On start of tests here should be set Strict or Nice Mocks for test purpose
    */
-  void setMock(std::weak_ptr<{{ interface_name }}> _mock);
+  void {{ class_name }}::setMock(std::weak_ptr<{{ interface_name }}> _mock) {
+    mock_ = _mock;
+  }
 {% endif %}
 
-  void setCallbacks() override;
-
-
-  /* ==========================================================================================
-   *                                      ATTRIBUTE SETTERS
-   * ==========================================================================================
-   */
+  void {{ class_name }}::setCallbacks() {
+    namespace Helper = WLanNetworking::Common::CallbackHelper;
+    // broadcasts call-backs
+{% for broadcast in meta['broadcasts'] %}
+{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
+{% set broadcast_name = "fire"+upper_name+"Event" %}
+    set("fire_{{ broadcast["snake_name"] }}", Helper::plainCall(this, &{{ class_name }}::{{ broadcast_name }}));
+{% endfor %}
+    // attribute call-backs
 {% for attribute in meta['attributes'] %}
-{% if attribute["description"] %}
-
-  /**
-   * {{ attribute["description"] }}
-   */
-{% endif %}
-  void set{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}Attribute({{ attribute["type"] }} _{{ attribute["name"] }}) override;
+{% set upper_name = attribute.name[0]|upper + attribute.name[1:] %}
+{% set attribute_name = "set"+attribute.name[0]|upper + attribute.name[1:]+"Attribute" %}
+    set("set_{{ attribute["snake_name"] }}", Helper::plainCall(this, &{{ class_name }}::{{ attribute_name }}));
 {% endfor %}
-
-
-  /* ==========================================================================================
-   *                                       REQUEST HANDLERS
-   * ==========================================================================================
-   */
-
-{% for method in meta['methods'] %}
-{% if method["description"] %}
-  /**
-   * {{ method["description"] }}
-   */
-{% endif %}
-  void {{ method.name }}(
-{% if method["in"] %}
-    const std::shared_ptr<CommonAPI::ClientId> _client,
-{% else %}
-    const std::shared_ptr<CommonAPI::ClientId> _client);
-{% endif %}
-{% for param in method["in"] %}
-{% if loop.last %}
-    const {{ param.type }} &_{{ param.name }});
-{% else %}
-    const {{ param.type }} &_{{ param.name }},
-{% endif %}
-{% endfor %}
-{% endfor %}
-
-
-  /* ==========================================================================================
-   *                                    BROADCASTS WRAPPERS
-   * ==========================================================================================
-   */
-{% for broadcast in meta['broadcasts'] %}
-{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
-
-  /**
-   * {{ broadcast["description"] }}
-   */
-   void fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) override;
-{% endfor %}
-{% if settings.is_mock %}
-
-
- private:
-  /* ==========================================================================================
-   *                                      PRIVATE MEMBERS
-   * ==========================================================================================
-   */
-  std::weak_ptr<{{ interface_name }}> mock_;
-{% endif %}
-};
-
-  /* ==========================================================================================
-   *                                    BROADCASTS WRAPPERS
-   * ==========================================================================================
-   */
-{% for broadcast in meta['broadcasts'] %}
-{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
-
-/**
- * {{ broadcast["description"] }}
- */
-inline
-void {{ class_name }}::fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) {
-  debug("%s{{ broadcast.out_debug_left }}", __func__{{ broadcast.out_debug_right }});
-  {{ class_name }}::fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}_{{ param.name }}{% else %}_{{ param.name }}, {% endif %}{% endfor %});
-}
-{% endfor %}
+  }
 
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}
-
-#endif  // {{ class_name|upper }}_HPP_
 {% endwith %}

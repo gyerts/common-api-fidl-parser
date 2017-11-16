@@ -27,10 +27,13 @@
 #include <CommonAPI/CommonAPI.hpp>
 
 #include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}StubDefault.hpp>
+#include <wnpp_common/DebugMessages/CDebugMessages.hpp>
+#include <pso/third_party/icc/src/commonapi/CommonAPIService.hpp>
+#include <pso/src/private/interfaces/ICallback.hpp>
 
 
 {% if settings.is_mock %}
-#include "C{{ meta.interface_name }}ServerMock.hpp";
+#include "Interface{{ meta.interface_name }}Server.hpp"
 {% endif %}
 
 namespace {{ settings.project_name }} {
@@ -40,11 +43,13 @@ namespace {{ class_namespace_name }} {
 using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
 using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
 using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}StubDefault;
+using CallbacksHelper::ICallback;
 
 
 class {{ class_name }}
   : public icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>
-  , public Logger {
+  , public Logger
+  , public ICallback {
  public:
   /* ==========================================================================================
    *                                      C-TORS / D-TORS
@@ -100,15 +105,16 @@ class {{ class_name }}
 {% if method["in"] %}
     const std::shared_ptr<CommonAPI::ClientId> _client,
 {% else %}
-    const std::shared_ptr<CommonAPI::ClientId> _client);
+    const std::shared_ptr<CommonAPI::ClientId> _client) override;
 {% endif %}
 {% for param in method["in"] %}
 {% if loop.last %}
-    const {{ param.type }} &_{{ param.name }});
+    const {{ param.type }} _{{ param.name }}) override;
 {% else %}
-    const {{ param.type }} &_{{ param.name }},
+    const {{ param.type }} _{{ param.name }},
 {% endif %}
 {% endfor %}
+
 {% endfor %}
 
 
@@ -122,7 +128,10 @@ class {{ class_name }}
   /**
    * {{ broadcast["description"] }}
    */
-   void fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) override;
+   void fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) {
+     debug("%s{{ broadcast.out_debug_left }}", __func__{{ broadcast.out_debug_right }});
+     {{ meta.interface_name }}StubDefault::fire{{ upper_name }}Event({{ broadcast.out_params_n }});
+   }
 {% endfor %}
 {% if settings.is_mock %}
 
@@ -135,23 +144,6 @@ class {{ class_name }}
   std::weak_ptr<{{ interface_name }}> mock_;
 {% endif %}
 };
-
-  /* ==========================================================================================
-   *                                    BROADCASTS WRAPPERS
-   * ==========================================================================================
-   */
-{% for broadcast in meta['broadcasts'] %}
-{% set upper_name = broadcast.name[0]|upper + broadcast.name[1:] %}
-
-/**
- * {{ broadcast["description"] }}
- */
-inline
-void {{ class_name }}::fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}const {{ param.type }} &_{{ param.name }}{% else %}const {{ param.type }} &_{{ param.name }}, {% endif %}{% endfor %}) {
-  debug("%s{{ broadcast.out_debug_left }}", __func__{{ broadcast.out_debug_right }});
-  {{ class_name }}::fire{{ upper_name }}Event({% for param in broadcast["out"] %}{% if loop.last %}_{{ param.name }}{% else %}_{{ param.name }}, {% endif %}{% endfor %});
-}
-{% endfor %}
 
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces

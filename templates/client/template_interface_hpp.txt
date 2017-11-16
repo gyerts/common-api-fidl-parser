@@ -54,7 +54,6 @@ struct {{ class_name }} {
 {% endfor %}
 };
 
-
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}

@@ -55,7 +55,6 @@ class {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interfac
 {% endfor %}
 };
 
-
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}

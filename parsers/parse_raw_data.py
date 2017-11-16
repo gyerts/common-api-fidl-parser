@@ -3,7 +3,9 @@ import re
 
 def parse_raw_data(filename):
     with open(filename) as f:
-        dirty_raw_data = re.split(' |\n', f.read())
+        dirty_raw_data = f.read()
+        dirty_raw_data = dirty_raw_data.replace("{}", "{ }")
+        dirty_raw_data = re.split(' |\n', dirty_raw_data)
         dirty_raw_data = [el for el in dirty_raw_data if el != '']
 
         clean_raw_data = []
