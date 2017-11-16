@@ -37,7 +37,11 @@ namespace {{ class_namespace_name }} {
  */
 {{ class_name }}::{{ class_name }}()
   : icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>("local", {{ meta.interface_name }}::getInterface())
+{% if meta['broadcasts'] %}
   , Logger("[{{ class_name }}]")
+{% else %}
+  , Logger("[{{ class_name }}]") {
+{% endif %}
 {% for broadcast in meta['broadcasts'] %}
 {% if loop.last %}
   , subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_({{ settings.project_name }}Const::kEmptySubscription) {
