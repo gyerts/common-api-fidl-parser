@@ -87,6 +87,8 @@ namespace {{ class_namespace_name }} {
    */
 
 {% for method in meta['methods'] %}
+{% set reply_param = method.name+"Reply_t _reply" %}
+
 {% if method["description"] %}
   /**
    * {{ method["description"] }}
@@ -99,10 +101,13 @@ namespace {{ class_namespace_name }} {
     const std::shared_ptr<CommonAPI::ClientId> _client) {
 {% endif %}
 {% for param in method["in"] %}
-{% if loop.last %}
+{% if loop.last and method.fireAndForget %}
     const {{ param.type }} _{{ param.name }}) {
 {% else %}
     const {{ param.type }} _{{ param.name }},
+{% endif %}
+{% if not method.fireAndForget %}
+    UsermanagerToHMIStub::{{ reply_param }}) {
 {% endif %}
 {% endfor %}
     debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});

@@ -43,6 +43,7 @@ namespace {{ class_namespace_name }} {
 using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
 using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
 using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}StubDefault;
+using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}Stub;
 using CallbacksHelper::ICallback;
 
 
@@ -96,7 +97,11 @@ class {{ class_name }}
    */
 
 {% for method in meta['methods'] %}
+{% if not method.fireAndForget %}
+{% set reply_param = method.name+"Reply_t _reply" %}
+{% endif %}
 {% if method["description"] %}
+
   /**
    * {{ method["description"] }}
    */
@@ -108,13 +113,13 @@ class {{ class_name }}
     const std::shared_ptr<CommonAPI::ClientId> _client) override;
 {% endif %}
 {% for param in method["in"] %}
-{% if loop.last %}
+{% if loop.last and method.fireAndForget %}
     const {{ param.type }} _{{ param.name }}) override;
 {% else %}
     const {{ param.type }} _{{ param.name }},
 {% endif %}
+{% if not method.fireAndForget %}    UsermanagerToHMIStub::{{ reply_param }}) override;{% endif %}
 {% endfor %}
-
 {% endfor %}
 
 
