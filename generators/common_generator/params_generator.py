@@ -99,10 +99,10 @@ def generate_params_placeholders_n(params: list):
 
 
 # add str ", std::placeholders::_1, std::placeholders::_2"
-def generate_params_placeholders_nl(params: list):
+def generate_params_placeholders_nl(params: list, minus: int = 0):
     output = str()
     for index, param in enumerate(params):
-        output += ", std::placeholders::_{index}".format(index=index + 2)
+        output += ", std::placeholders::_{index}".format(index=index + 2 - minus)
     return output
 
 

@@ -88,19 +88,35 @@ class {{ class_name }}
    *                                          SUBSCRIPTION TYPES
    * ==========================================================================================
    */
+{% if meta['broadcasts'] %}
 
   /// Broadcast subscription types
 {% for broadcast in meta['broadcasts'] %}
   CommonAPI::Event<>::Subscription subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_;
 {% endfor %}
+{% endif %}
+{% if meta['attributes'] %}
+
+  /// Attributes subscription types
+{% for attribute in meta['attributes'] %}
+  CommonAPI::Event<>::Subscription subscriptionOn{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}AttributeUpdate_;
+{% endfor %}
+{% endif %}
 
   /* ==========================================================================================
    *                                          INFORMATIONS
    * ==========================================================================================
    */
 
+  /// broadcasts informations
 {% for broadcast in meta['broadcasts'] %}
-  void information{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}();
+  void information{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}({{ broadcast.out_params_ctrn }});
+{% endfor %}
+
+  /// attribute informations
+{% for attribute in meta['attributes'] %}
+{% set attribute_name = "information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+  void {{ attribute_name }}(const {{ attribute.type }} &_{{ attribute.name }});
 {% endfor %}
 
 
@@ -149,7 +165,7 @@ class {{ class_name }}
     debug("%s __isNotify=%s", __func__, {{ settings.project_name }}Converters::toString(_isNotify).c_str());
     if (_isNotify) {
       if ({{ settings.project_name }}Const::kEmptySubscription == {{ subscription }}) {
-        auto kCallback = std::bind(&{{ class_name }}::{{ information }}, this);
+        auto kCallback = std::bind(&{{ class_name }}::{{ information }}, this{{ broadcast.out_params_placeholders_nl1 }});
         {{ subscription }} = {{ generatedCommonAPIEvent }}.subscribe(kCallback);
       }
     } else {
@@ -160,6 +176,38 @@ class {{ class_name }}
     }
   }
 {% endfor %}
+
+
+  /* ==========================================================================================
+   *                                          ATTRIBUTES
+   * ==========================================================================================
+   */
+
+{% for attribute in meta['attributes'] %}
+
+  /**
+   * {{ attribute["description"] }}
+   */
+{% set upper_name = attribute.name[0]|upper + attribute.name[1:] %}
+{% set subscription = "subscriptionOn"+upper_name+"AttributeUpdate_" %}
+{% set information = "information"+upper_name+"AttributeUpdate" %}
+{% set generatedCommonAPIAttribute = "get"+upper_name+"Attribute()" %}
+  inline void notify{{ upper_name }}(const bool _isNotify) {
+    debug("%s __isNotify=%s", __func__, {{ settings.project_name }}Converters::toString(_isNotify).c_str());
+    if (_isNotify) {
+      if ({{ settings.project_name }}Const::kEmptySubscription == {{ subscription }}) {
+        auto kCallback = std::bind(&{{ class_name }}::{{ information }}, this, std::placeholders::_1);
+        {{ subscription }} = {{ generatedCommonAPIAttribute }}.getChangedEvent().subscribe(kCallback);
+      }
+    } else {
+      if ({{ settings.project_name }}Const::kEmptySubscription != {{ subscription }}) {
+        {{ generatedCommonAPIAttribute }}.getChangedEvent().unsubscribe({{ subscription }});
+        {{ subscription }} = {{ settings.project_name }}Const::kEmptySubscription;
+      }
+    }
+  }
+{% endfor %}
+
 
   /* ==========================================================================================
    *                                          REQUESTS
@@ -173,8 +221,12 @@ class {{ class_name }}
    */
 {% set upper_name = method.name[0]|upper + method.name[1:] %}
 {% set CommonAPIAsyncCall = method["name"]+"Async" %}
+{% set CommonAPISimpleCall = method["name"] %}
+{% if not method.fireAndForget %}
   std::future<CommonAPI::CallStatus> request{{ upper_name }}({% if not method["in"] %}) { {% endif %}
-
+{% else %}
+  CommonAPI::CallStatus request{{ upper_name }}({% if not method["in"] %}) { {% endif %}
+{% endif %}
 {% for param in method["in"] %}
 {% if loop.last %}
     const {{ param.type }} &_{{ param.name }}) {
@@ -182,8 +234,13 @@ class {{ class_name }}
     const {{ param.type }} &_{{ param.name }},
 {% endif %}{% endfor %}
     debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});
+{% if not method.fireAndForget %}
     auto kCallback = std::bind(&{{ class_name }}::response{{ upper_name }}, this, std::placeholders::_1{{ method.out_params_placeholders_nl }});
     return {{ CommonAPIAsyncCall }}({{ method.in_params_nr }}kCallback);
+{% else %}
+    {{ CommonAPISimpleCall }}({{ method.in_params_nr }}status_);
+    return status_;
+{% endif %}
   }
 {% endfor %}
 
@@ -194,6 +251,7 @@ class {{ class_name }}
    * ==========================================================================================
    */
   std::weak_ptr<{{ interface_name }}> mock_;
+  CommonAPI::CallStatus status_; // this member using only while not async method call performs
 {% endif %}
 };
 

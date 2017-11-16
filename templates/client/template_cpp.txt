@@ -80,18 +80,45 @@ void {{ class_name }}::disconnected({{ meta.interface_name }}Proxy<>&) {
 
 {% for broadcast in meta['broadcasts'] %}
 
+{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
 {% if broadcast["description"] %}
 /**
  * {{ broadcast["description"] }}
  */
 {% endif %}
-void {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
-{{ class_name }}::{{ broadcast_name }}() {
-  debug("%s", __func__);
+void {{ class_name }}::{{ broadcast_name }}({{ broadcast.out_params_ctrn }}) {
+  debug("%s{{ broadcast.out_debug_left }}", __func__{{ broadcast.out_debug_right }});
 {% if settings.is_mock %}
   if (auto mock = mock_.lock()) {
     debug("[{{ class_name|upper }}][CLIENT][  OK ] %s, call mock->mock_{{ broadcast_name }}", __func__);
     mock->mock_{{ broadcast_name }}();
+  } else {
+    error("[{{ class_name|upper }}][CLIENT][ERROR] %s, call mock failed, mock_ is not initialized", __func__);
+  }
+{% endif %}
+}
+{% endfor %}
+
+
+/* ==========================================================================================
+ *                     INFORMATIONS - CommonAPI "attribute" handlers
+ * ==========================================================================================
+ */
+
+{% for attribute in meta['attributes'] %}
+
+{% set attribute_name = "information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+{% if attribute["description"] %}
+/**
+ * {{ attribute["description"] }}
+ */
+{% endif %}
+void {{ class_name }}::{{ attribute_name }}(const {{ attribute.type }} &_{{ attribute.name }}) {
+  debug("%s{{ attribute.out_debug_left }}", __func__{{ attribute.out_debug_right }});
+{% if settings.is_mock %}
+  if (auto mock = mock_.lock()) {
+    debug("[{{ class_name|upper }}][CLIENT][  OK ] %s, call mock->mock_{{ attribute_name }}", __func__);
+    mock->mock_{{ attribute_name }}();
   } else {
     error("[{{ class_name|upper }}][CLIENT][ERROR] %s, call mock failed, mock_ is not initialized", __func__);
   }
@@ -106,15 +133,19 @@ void {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.nam
  */
 
 {% for method in meta['methods'] %}
+{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
 
 {% if method["description"] %}
 /**
  * {{ method["description"] }}
  */
 {% endif %}
-{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
 void {{ class_name }}::{{ method_name }}(
+{% if method["out"] %}
   const CommonAPI::CallStatus &_callStatus,
+{% else %}
+  const CommonAPI::CallStatus &_callStatus) {
+{% endif %}
 {% for param in method["out"] %}
 {% if loop.last %}
   const {{ param.type }} &_{{ param.name }}) {

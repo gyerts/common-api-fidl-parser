@@ -34,14 +34,23 @@ namespace {{ class_namespace_name }} {
  * ==========================================================================================
  */
 struct {{ class_name }} {
+  virtual ~{{ class_name }}() {}
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
  */
-  virtual ~{{ class_name }}() {}
 {% for broadcast in meta['broadcasts'] %}
-{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
-  virtual void mock_{{ broadcast_name }}() = 0;
+{% set broadcast_name = "mock_information"+broadcast.name[0]|upper+broadcast.name[1:] %}
+  virtual void {{ broadcast_name }}() = 0;
+{% endfor %}
+
+/* ==========================================================================================
+ *                     INFORMATIONS - CommonAPI "attribute" handlers
+ * ==========================================================================================
+ */
+{% for attribute in meta['attributes'] %}
+{% set attribute_name = "mock_information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+  virtual void {{ attribute_name }}() = 0;
 {% endfor %}
 
 /* ==========================================================================================
@@ -49,8 +58,8 @@ struct {{ class_name }} {
  * ==========================================================================================
  */
 {% for method in meta['methods'] %}
-{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
-  virtual void mock_{{ method_name }}() = 0;
+{% set method_name = "mock_response"+method.name[0]|upper+method.name[1:] %}
+  virtual void {{ method_name }}() = 0;
 {% endfor %}
 };
 

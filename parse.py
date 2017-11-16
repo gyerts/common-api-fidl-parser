@@ -119,6 +119,7 @@ for file_path in all_files:
                 broadcast["out_params_placeholders_n"] = generate_params_placeholders_n(broadcast["out"])
                 # add str ", std::placeholder::_1, std::placeholder::_2"
                 broadcast["out_params_placeholders_nl"] = generate_params_placeholders_nl(broadcast["out"])
+                broadcast["out_params_placeholders_nl1"] = generate_params_placeholders_nl(broadcast["out"], 1)
                 # add str "std::placeholder::_1, std::placeholder::_2, "
                 broadcast["out_params_placeholders_nr"] = generate_params_placeholders_nr(broadcast["out"])
                 broadcast["out_debug_left"] = generate_debug_left(broadcast["out"])
@@ -133,20 +134,20 @@ for file_path in all_files:
         ##################################################################################################
         # Generate Client
         ##################################################################################################
-        # generate_file(all, "C"+all["interface_name"]+"Client.hpp", "templates/client/template_hpp.txt")
-        # generate_file(all, "C"+all["interface_name"]+"Client.cpp", "templates/client/template_cpp.txt")
-        # if settings["is_mock"]:
-        #     generate_file(all, "C"+all["interface_name"]+"ClientMock.hpp", "templates/client/template_mock_hpp.txt")
-        #     generate_file(all, "Interface"+all["interface_name"]+"Client.hpp", "templates/client/template_interface_hpp.txt")
+        generate_file(all, "C"+all["interface_name"]+"Client.hpp", "templates/client/template_hpp.txt")
+        generate_file(all, "C"+all["interface_name"]+"Client.cpp", "templates/client/template_cpp.txt")
+        if settings["is_mock"]:
+            generate_file(all, "C"+all["interface_name"]+"ClientMock.hpp", "templates/client/template_mock_hpp.txt")
+            generate_file(all, "Interface"+all["interface_name"]+"Client.hpp", "templates/client/template_interface_hpp.txt")
 
         ##################################################################################################
         # Generate Server
         ##################################################################################################
-        generate_file(all, "C" + all["interface_name"] + "Server.hpp", "templates/server/template_hpp.txt")
-        generate_file(all, "C" + all["interface_name"] + "Server.cpp", "templates/server/template_cpp.txt")
-        if settings["is_mock"]:
-            generate_file(all, "C" + all["interface_name"] + "ServerMock.hpp", "templates/server/template_mock_hpp.txt")
-            generate_file(all, "Interface" + all["interface_name"] + "Server.hpp", "templates/server/template_interface_hpp.txt")
+        # generate_file(all, "C" + all["interface_name"] + "Server.hpp", "templates/server/template_hpp.txt")
+        # generate_file(all, "C" + all["interface_name"] + "Server.cpp", "templates/server/template_cpp.txt")
+        # if settings["is_mock"]:
+        #     generate_file(all, "C" + all["interface_name"] + "ServerMock.hpp", "templates/server/template_mock_hpp.txt")
+        #     generate_file(all, "Interface" + all["interface_name"] + "Server.hpp", "templates/server/template_interface_hpp.txt")
 
         ##################################################################################################
         # write to json file read_info.json

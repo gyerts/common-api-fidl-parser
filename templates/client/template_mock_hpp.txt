@@ -41,8 +41,17 @@ class {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interfac
  * ==========================================================================================
  */
 {% for broadcast in meta['broadcasts'] %}
-{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
+{% set broadcast_name = "mock_information"+broadcast.name[0]|upper+broadcast.name[1:] %}
   MOCK_METHOD0({{ broadcast_name }}, void());
+{% endfor %}
+
+/* ==========================================================================================
+ *                     INFORMATIONS - CommonAPI "attribute" handlers
+ * ==========================================================================================
+ */
+{% for attribute in meta['attributes'] %}
+{% set attribute_name = "mock_information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+  MOCK_METHOD0({{ attribute_name }}, void());
 {% endfor %}
 
 /* ==========================================================================================
@@ -50,7 +59,7 @@ class {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interfac
  * ==========================================================================================
  */
 {% for method in meta['methods'] %}
-{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
+{% set method_name = "mock_response"+method.name[0]|upper+method.name[1:] %}
   MOCK_METHOD0({{ method_name }}, void());
 {% endfor %}
 };
