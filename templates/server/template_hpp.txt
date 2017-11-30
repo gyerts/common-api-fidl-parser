@@ -28,7 +28,9 @@
 
 #include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}StubDefault.hpp>
 #include <wnpp_common/DebugMessages/CDebugMessages.hpp>
+{% if settings.icc %}
 #include <pso/third_party/icc/src/commonapi/CommonAPIService.hpp>
+{% endif %}
 {% if generate_callbacks %}
 #include <pso/src/private/interfaces/ICallback.hpp>
 {% endif %}
@@ -51,7 +53,11 @@ using CallbacksHelper::ICallback;
 
 
 class {{ class_name }}
+{% if settings.icc %}
   : public icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>
+{% else %}
+  : public {{ meta.interface_name }}StubDefault
+{% endif %}
 {% if generate_callbacks %}
   , public Logger
   , public ICallback {

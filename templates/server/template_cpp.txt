@@ -20,8 +20,13 @@ namespace {{ class_namespace_name }} {
    */
 
   {{ class_name }}::{{ class_name }}()
+{% if settings.icc %}
     : icc::commonapi::CommonAPIService<{{ meta.interface_name }}StubDefault>()
     , Logger("[{{ class_name }}]") {
+{% else %}
+    : Logger("[{{ class_name }}]") {
+{% endif %}
+
     debug("%s: Construct", __func__);
 {% if generate_callbacks %}
     setCallbacks();

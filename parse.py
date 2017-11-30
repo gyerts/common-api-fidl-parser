@@ -14,7 +14,7 @@ from generators.common_generator.render_file import set_template_dir
 
 # Capture our current directory
 set_template_dir(os.path.dirname(os.path.abspath(__file__)),
-                 "/home/ygyerts/workspace/mib3_integ_linux/usr_pkgs/luxoft/wnpp/pso/tests/TestCasesForCommonAPI/DummyClientsImpl")
+                 "/home/ygyerts/PycharmProjects/common-api-fidl-parser/output")
 
 if not os.path.exists("output"):
     os.makedirs("output")

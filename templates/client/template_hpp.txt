@@ -31,7 +31,9 @@
 #include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}Proxy.hpp>
 #include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}.hpp>
 
+{% if settings.icc %}
 #include <pso/third_party/icc/src/commonapi/CommonAPIClient.hpp>
+{% endif %}
 #include <src/common/{{ settings.project_name }}Constants.hpp>
 #include <src/private/helpers/CommonAPIHelper.hpp>
 #include <src/private/helpers/{{ settings.project_name }}Converters.hpp>
@@ -51,7 +53,11 @@ using {{ common_api_proxy }};
 
 
 class {{ class_name }}
+{% if settings.icc %}
   : public icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>
+{% else %}
+  : public {{ common_api_proxy }}Default
+{% endif %}
   , public Logger {
  public:
   /* ==========================================================================================

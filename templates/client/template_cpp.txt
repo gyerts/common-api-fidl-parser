@@ -36,7 +36,11 @@ namespace {{ class_namespace_name }} {
  *                    broadcasts after specific execution of {{ class_name }}
  */
 {{ class_name }}::{{ class_name }}()
+{% if settings.icc %}
   : icc::commonapi::CommonAPIClient<{{ meta.interface_name }}Proxy>("local", {{ meta.interface_name }}::getInterface())
+{% else %}
+  : {{ common_api_proxy }}Default
+{% endif %}
 {% if meta['broadcasts'] %}
   , Logger("[{{ class_name }}]")
 {% else %}
