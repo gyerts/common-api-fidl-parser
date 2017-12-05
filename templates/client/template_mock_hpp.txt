@@ -35,7 +35,7 @@ namespace {{ class_namespace_name }} {
  *                     MOCK INTERFACE
  * ==========================================================================================
  */
-class {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interface_name }} {
+struct {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interface_name }} {
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
@@ -63,6 +63,18 @@ class {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interfac
   MOCK_METHOD0({{ method_name }}, void());
 {% endfor %}
 };
+
+using {{ class_name }}Ptr = std::shared_ptr<{{ class_name }}>;
+using {{ class_name }}WeakPtr = std::weak_ptr<{{ class_name }}>;
+
+using C{{ meta.interface_name }}ClientStrictMock = ::testing::StrictMock<{{ class_name }}>;
+using C{{ meta.interface_name }}ClientNiceMock = ::testing::NiceMock<{{ class_name }}>;
+
+using C{{ meta.interface_name }}ClientStrictMockPtr = std::shared_ptr<C{{ meta.interface_name }}ClientStrictMock>;
+using C{{ meta.interface_name }}ClientStrictMockWeakPtr = std::weak_ptr<C{{ meta.interface_name }}ClientStrictMock>;
+
+using C{{ meta.interface_name }}ClientNiceMockPtr = std::shared_ptr<C{{ meta.interface_name }}ClientNiceMock>;
+using C{{ meta.interface_name }}ClientNiceMockWeakPtr = std::weak_ptr<C{{ meta.interface_name }}ClientNiceMock>;
 
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces

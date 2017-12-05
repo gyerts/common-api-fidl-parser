@@ -124,6 +124,15 @@ namespace {{ class_namespace_name }} {
     {{ meta.interface_name }}Stub::{{ reply_param }}) {
 {% endif %}
     debug("%s{{ method.in_debug_left }}", __func__{{ method.in_debug_right }});
+
+{% if settings.is_mock %}
+    if (auto mock = mock_.lock()) {
+      debug("[{{ class_name|upper }}][CLIENT][  OK ] %s, call mock->mock_{{ method.name }}", __func__);
+      mock->mock_{{ method.name }}();
+    } else {
+      error("[{{ class_name|upper }}][CLIENT][ERROR] %s, call mock failed, mock_ is not initialized", __func__);
+    }
+{% endif %}
   }
 {% endfor %}
 

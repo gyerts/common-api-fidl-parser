@@ -29,7 +29,7 @@ namespace {{ class_namespace_name }} {
  *                     {{ class_name|upper }} INTERFACE
  * ==========================================================================================
  */
-class {{ class_name }} {
+struct {{ class_name }} {
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
@@ -44,8 +44,8 @@ class {{ class_name }} {
  * ==========================================================================================
  */
 {% for method in meta['methods'] %}
-{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
-  virtual void mock_{{ method_name }}() = 0;
+{% set method_name = "mock_"+method.name %}
+  virtual void {{ method_name }}() = 0;
 {% endfor %}
 };
 

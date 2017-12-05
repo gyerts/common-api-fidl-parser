@@ -18,6 +18,9 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef {{ class_name|upper }}_HPP_
+#define {{ class_name|upper }}_HPP_
+
 #include <gmock/gmock.h>
 #include "{{ class_name }}.hpp"
 #include "{{ generated_interface_name }}.hpp"
@@ -31,13 +34,13 @@ namespace {{ class_namespace_name }} {
  *                     MOCK INTERFACE
  * ==========================================================================================
  */
-class {{ class_name }} : public {{ meta.interface_name }}Server::{{ generated_interface_name }} {
+struct {{ class_name }} : public {{ meta.interface_name }}Server::{{ generated_interface_name }} {
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
  */
 {% for broadcast in meta['broadcasts'] %}
-{% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
+{% set broadcast_name = "mock_information"+broadcast.name[0]|upper+broadcast.name[1:] %}
   MOCK_METHOD0({{ broadcast_name }}, void());
 {% endfor %}
 
@@ -46,12 +49,26 @@ class {{ class_name }} : public {{ meta.interface_name }}Server::{{ generated_in
  * ==========================================================================================
  */
 {% for method in meta['methods'] %}
-{% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
+{% set method_name = "mock_"+method.name %}
   MOCK_METHOD0({{ method_name }}, void());
 {% endfor %}
 };
 
+using {{ class_name }}Ptr = std::shared_ptr<{{ class_name }}>;
+using {{ class_name }}WeakPtr = std::weak_ptr<{{ class_name }}>;
+
+using C{{ meta.interface_name }}ServerStrictMock = ::testing::StrictMock<{{ class_name }}>;
+using C{{ meta.interface_name }}ServerNiceMock = ::testing::NiceMock<{{ class_name }}>;
+
+using C{{ meta.interface_name }}ServerStrictMockPtr = std::shared_ptr<C{{ meta.interface_name }}ServerStrictMock>;
+using C{{ meta.interface_name }}ServerStrictMockWeakPtr = std::weak_ptr<C{{ meta.interface_name }}ServerStrictMock>;
+
+using C{{ meta.interface_name }}ServerNiceMockPtr = std::shared_ptr<C{{ meta.interface_name }}ServerNiceMock>;
+using C{{ meta.interface_name }}ServerNiceMockWeakPtr = std::weak_ptr<C{{ meta.interface_name }}ServerNiceMock>;
+
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}
+
+#endif  // {{ class_name|upper }}_HPP_
 {% endwith %}
