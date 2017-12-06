@@ -56,7 +56,6 @@ namespace {{ class_namespace_name }} {
   debug("%s: Constructor", __func__);
 }
 
-
 /* ==========================================================================================
  *                     Connection and Disconnection handlers
  * ==========================================================================================
@@ -79,7 +78,6 @@ void {{ class_name }}::disconnected({{ meta.interface_name }}Proxy<>&) {
   notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(false);
 {% endfor %}
 }
-
 
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
@@ -107,7 +105,6 @@ void {{ class_name }}::{{ broadcast_name }}({{ broadcast.out_params_ctrn }}) {
 }
 {% endfor %}
 
-
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "attribute" handlers
  * ==========================================================================================
@@ -133,7 +130,6 @@ void {{ class_name }}::{{ attribute_name }}(const {{ attribute.type }} &_{{ attr
 {% endif %}
 }
 {% endfor %}
-
 
 /* ==========================================================================================
  *                      RESPONSES - CommonAPI "request" handlers
