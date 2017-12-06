@@ -169,6 +169,9 @@ class {{ class_name }}
 {% endif %}
 };
 
+using {{ class_name }}Ptr = std::shared_ptr<{{ class_name }}>;
+using {{ class_name }}WeakPtr = std::weak_ptr<{{ class_name }}>;
+
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}

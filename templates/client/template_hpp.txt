@@ -37,9 +37,9 @@
 #include <src/common/{{ settings.project_name }}Constants.hpp>
 #include <src/private/helpers/CommonAPIHelper.hpp>
 #include <src/private/helpers/{{ settings.project_name }}Converters.hpp>
-#include "{{ interface_name }}.hpp"
 
 {% if settings.is_mock %}
+#include "{{ interface_name }}.hpp"
 #include "C{{ meta.interface_name }}ClientMock.hpp"
 {% endif %}
 
@@ -260,6 +260,9 @@ class {{ class_name }}
   CommonAPI::CallStatus status_; // this member using only while not async method call performs
 {% endif %}
 };
+
+using {{ class_name }}Ptr = std::shared_ptr<{{ class_name }}>;
+using {{ class_name }}WeakPtr = std::weak_ptr<{{ class_name }}>;
 
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces

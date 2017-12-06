@@ -4,5 +4,5 @@ settings = {
     "author": "Yuriy Gyerts",
     "is_mock": False,
     "generate_callbacks": False,
-    "icc": False
+    "icc": True
 }
