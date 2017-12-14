@@ -49,7 +49,7 @@ struct {{ class_name }} {
  * ==========================================================================================
  */
 {% for attribute in meta['attributes'] %}
-{% set attribute_name = "mock_information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+{% set attribute_name = "mock_on"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
   virtual void {{ attribute_name }}() = 0;
 {% endfor %}
 

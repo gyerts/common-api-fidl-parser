@@ -50,7 +50,7 @@ struct {{ class_name }} : public {{ meta.interface_name }}Client::{{ gen_interfa
  * ==========================================================================================
  */
 {% for attribute in meta['attributes'] %}
-{% set attribute_name = "mock_information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+{% set attribute_name = "mock_on"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
   MOCK_METHOD0({{ attribute_name }}, void());
 {% endfor %}
 

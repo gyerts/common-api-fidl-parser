@@ -2,7 +2,7 @@
 {% set class_namespace_name = meta.interface_name+"Client" %}
 {% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
-{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
+{% set common_api_proxy = "v"+meta.version.major+"::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// Project          {{ settings.project_name }}
@@ -11,11 +11,11 @@
 ///                  All rights reserved
 ///
 ////////////////////////////////////////////////////////////////////////////////
-/// @file            {{ class_name }}.hpp
+/// @file            {{ class_name }}.cpp
 /// @authors         {{ settings.author }}
-/// @date            27.10.17
+/// @date            {{ meta.current_date }}
 ///
-/// @brief           Declaration of class {{ class_name }}
+/// @brief           Implementation of class {{ class_name }}
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,19 +41,29 @@ namespace {{ class_namespace_name }} {
 {% else %}
   : {{ common_api_proxy }}Default
 {% endif %}
-{% if meta['broadcasts'] %}
+{% if meta['broadcasts'] or meta['attributes'] %}
   , Logger("[{{ class_name }}]")
 {% else %}
   , Logger("[{{ class_name }}]") {
 {% endif %}
 {% for broadcast in meta['broadcasts'] %}
-{% if loop.last %}
+{% if loop.last and not meta['attributes']|length %}
   , subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_({{ settings.project_name }}Const::kEmptySubscription) {
 {% else %}
   , subscription{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}_({{ settings.project_name }}Const::kEmptySubscription)
 {% endif %}
 {% endfor %}
+{% for attribute in meta['attributes'] %}
+{% if loop.last %}
+  , subscriptionOn{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}AttributeUpdate_({{ settings.project_name }}Const::kEmptySubscription) {
+{% else %}
+  , subscriptionOn{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}AttributeUpdate_({{ settings.project_name }}Const::kEmptySubscription)
+{% endif %}
+{% endfor %}
   debug("%s: Constructor", __func__);
+}
+
+{{ class_name }}::~{{ class_name }}() {
 }
 
 /* ==========================================================================================
@@ -68,6 +78,9 @@ void {{ class_name }}::connected({{ meta.interface_name }}Proxy<>&) {
 {% for broadcast in meta['broadcasts'] %}
   notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(true);
 {% endfor %}
+{% for attribute in meta['attributes'] %}
+  notifyOn{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}AttributeUpdate(true);
+{% endfor %}
 }
 
 /**
@@ -77,13 +90,16 @@ void {{ class_name }}::disconnected({{ meta.interface_name }}Proxy<>&) {
 {% for broadcast in meta['broadcasts'] %}
   notify{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}(false);
 {% endfor %}
+{% for attribute in meta['attributes'] %}
+  notifyOn{{ attribute.name[0]|upper }}{{ attribute.name[1:] }}AttributeUpdate(false);
+{% endfor %}
 }
-
+{% if 'broadcasts' in meta and meta['broadcasts']|length %}
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "broadcast" handlers
  * ==========================================================================================
  */
-
+{% endif %}
 {% for broadcast in meta['broadcasts'] %}
 
 {% set broadcast_name = "information"+broadcast.name[0]|upper+broadcast.name[1:] %}
@@ -104,15 +120,16 @@ void {{ class_name }}::{{ broadcast_name }}({{ broadcast.out_params_ctrn }}) {
 {% endif %}
 }
 {% endfor %}
+{% if 'attributes' in meta and meta['attributes']|length %}
 
 /* ==========================================================================================
  *                     INFORMATIONS - CommonAPI "attribute" handlers
  * ==========================================================================================
  */
+{% endif %}
 
 {% for attribute in meta['attributes'] %}
-
-{% set attribute_name = "information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+{% set attribute_name = "on"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
 {% if attribute["description"] %}
 /**
  * {{ attribute["description"] }}
@@ -130,12 +147,13 @@ void {{ class_name }}::{{ attribute_name }}(const {{ attribute.type }} &_{{ attr
 {% endif %}
 }
 {% endfor %}
+{% if 'methods' in meta and meta['methods']|length %}
 
 /* ==========================================================================================
  *                      RESPONSES - CommonAPI "request" handlers
  * ==========================================================================================
  */
-
+{% endif %}
 {% for method in meta['methods'] %}
 {% set method_name = "response"+method.name[0]|upper+method.name[1:] %}
 
@@ -171,10 +189,10 @@ void {{ class_name }}::{{ method_name }}(
 
 {% if settings.is_mock %}
 void {{ class_name }}::setMock(std::weak_ptr<{{ interface_name }}> _mock) {
+  debug("%s", __func__);
   mock_ = _mock;
 }
 {% endif %}
-
 }  // namespace {{ class_namespace_name }}
 }  // namespace Interfaces
 }  // namespace {{ settings.project_name }}

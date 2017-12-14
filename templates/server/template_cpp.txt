@@ -2,6 +2,22 @@
 {% set class_namespace_name = meta.interface_name+"Server" %}
 {% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
+///////////////////////////////////////////////////////////////////////////////
+///
+/// Project          {{ settings.project_name }}
+/// Copyright (c)    2017
+/// Company          {{ settings.company }}
+///                  All rights reserved
+///
+////////////////////////////////////////////////////////////////////////////////
+/// @file            {{ class_name }}.cpp
+/// @authors         {{ settings.author }}
+/// @date            {{ meta.current_date }}
+///
+/// @brief           Implementation of class {{ class_name }}
+///
+////////////////////////////////////////////////////////////////////////////////
+
 #include <memory>
 #include <string>
 
@@ -47,6 +63,7 @@ namespace {{ class_namespace_name }} {
    * On start of tests here should be set Strict or Nice Mocks for test purpose
    */
   void {{ class_name }}::setMock(std::weak_ptr<{{ interface_name }}> _mock) {
+    debug("%s", __func__);
     mock_ = _mock;
   }
 {% endif %}

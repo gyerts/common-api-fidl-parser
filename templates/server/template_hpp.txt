@@ -4,15 +4,15 @@
 {% set class_name = "C"+class_namespace_name %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Project          {{ settings.PROJECT_NAME }}
+/// Project          {{ settings.project_name }}
 /// Copyright (c)    2017
-/// Company          {{ settings.COMPANY }}
+/// Company          {{ settings.company }}
 ///                  All rights reserved
 ///
 ////////////////////////////////////////////////////////////////////////////////
 /// @file            {{ class_name }}.hpp
-/// @authors         {{ settings.AUTHOR }}
-/// @date            27.10.17
+/// @authors         {{ settings.author }}
+/// @date            {{ meta.current_date }}
 ///
 /// @brief           Declaration of class {{ class_name }}
 ///
@@ -26,7 +26,7 @@
 
 #include <CommonAPI/CommonAPI.hpp>
 
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}StubDefault.hpp>
+#include <v{{ meta.version.major }}/{{ meta.generated_path }}/{{ meta.interface_name }}StubDefault.hpp>
 #include <wnpp_common/DebugMessages/CDebugMessages.hpp>
 {% if settings.icc %}
 #include <pso/third_party/icc/src/commonapi/CommonAPIService.hpp>
@@ -44,9 +44,9 @@ namespace Interfaces {
 namespace {{ class_namespace_name }} {
 
 using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
-using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
-using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}StubDefault;
-using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }}Stub;
+using v{{ meta.version.major }}::{{ meta.generated_namespace }}::{{ meta.interface_name }};
+using v{{ meta.version.major }}::{{ meta.generated_namespace }}::{{ meta.interface_name }}StubDefault;
+using v{{ meta.version.major }}::{{ meta.generated_namespace }}::{{ meta.interface_name }}Stub;
 {% if generate_callbacks %}
 using CallbacksHelper::ICallback;
 {% endif %}

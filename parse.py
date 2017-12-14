@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+from datetime import datetime
 
 from configurations import settings
 from generators.common_generator.render_file import generate_file
@@ -9,6 +10,7 @@ from generators.common_generator.generate_types import generate_method_types
 from generators.common_generator.generate_types import generate_attributes_types
 from parsers.parse_interfaces import parse_interfaces
 from parsers.parse_package_name import parse_package_name
+from parsers.parse_version import parse_version
 from parsers.parse_raw_data import parse_raw_data
 from generators.common_generator.render_file import set_template_dir
 
@@ -34,8 +36,10 @@ for file_path in all_files:
     # Parse package name
     #############################
     all["package_name"] = parse_package_name(raw_data).split(".")
+    all["version"] = parse_version(raw_data)
     all["generated_namespace"] = "::".join(all["package_name"])
     all["generated_path"] = "/".join(all["package_name"])
+    all["current_date"] = datetime.today().strftime('%d.%m.%Y')
 
     #############################
     # Parse Interfaces

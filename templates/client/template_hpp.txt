@@ -2,18 +2,18 @@
 {% set class_namespace_name = meta.interface_name+"Client" %}
 {% set interface_name = "Interface"+class_namespace_name %}
 {% set class_name = "C"+class_namespace_name %}
-{% set common_api_proxy = "v1::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
+{% set common_api_proxy = "v"+meta.version.major+"::"+meta.generated_namespace+"::"+meta.interface_name+"Proxy" %}
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// Project          {{ settings.project_name }}
 /// Copyright (c)    2017
-/// Company          {{ settings.COMPANY }}
+/// Company          {{ settings.company }}
 ///                  All rights reserved
 ///
 ////////////////////////////////////////////////////////////////////////////////
 /// @file            {{ class_name }}.hpp
-/// @authors         {{ settings.AUTHOR }}
-/// @date            27.10.17
+/// @authors         {{ settings.author }}
+/// @date            {{ meta.current_date }}
 ///
 /// @brief           Declaration of class {{ class_name }}
 ///
@@ -27,9 +27,9 @@
 
 #include <CommonAPI/CommonAPI.hpp>
 
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}DBusDeployment.hpp>
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}Proxy.hpp>
-#include <v1/{{ meta.generated_path }}/{{ meta.interface_name }}.hpp>
+#include <v{{ meta.version.major }}/{{ meta.generated_path }}/{{ meta.interface_name }}DBusDeployment.hpp>
+#include <v{{ meta.version.major }}/{{ meta.generated_path }}/{{ meta.interface_name }}Proxy.hpp>
+#include <v{{ meta.version.major }}/{{ meta.generated_path }}/{{ meta.interface_name }}.hpp>
 
 {% if settings.icc %}
 #include <pso/third_party/icc/src/commonapi/CommonAPIClient.hpp>
@@ -48,7 +48,7 @@ namespace Interfaces {
 namespace {{ class_namespace_name }} {
 
 using Logger = WLanNetworking::Common::DebugMessages::CDebugMessages;
-using v1::{{ meta.generated_namespace }}::{{ meta.interface_name }};
+using v{{ meta.version.major }}::{{ meta.generated_namespace }}::{{ meta.interface_name }};
 using {{ common_api_proxy }};
 
 
@@ -66,6 +66,8 @@ class {{ class_name }}
    */
 
   {{ class_name }}();
+
+  virtual ~{{ class_name }}();
 
   /* ==========================================================================================
    *                                       PUBLIC METHODS
@@ -87,12 +89,14 @@ class {{ class_name }}
    * On start of tests here should be set Strict or Nice Mocks for test purpose
    */
   void setMock(std::weak_ptr<{{ interface_name }}> _mock);
-{% endif %}
 
+{% endif %}
+{% if meta['broadcasts'] or meta['attributes'] %}
   /* ==========================================================================================
    *                                          SUBSCRIPTION TYPES
    * ==========================================================================================
    */
+{% endif %}
 {% if meta['broadcasts'] %}
 
   /// Broadcast subscription types
@@ -112,15 +116,19 @@ class {{ class_name }}
    *                                          INFORMATIONS
    * ==========================================================================================
    */
+{% if 'broadcasts' in meta and meta['broadcasts']|length %}
 
   /// broadcasts informations
+{% endif %}
 {% for broadcast in meta['broadcasts'] %}
   void information{{ broadcast.name[0]|upper }}{{ broadcast.name[1:] }}({{ broadcast.out_params_ctrn }});
 {% endfor %}
+{% if 'attributes' in meta and meta['attributes']|length %}
 
   /// attribute informations
+{% endif %}
 {% for attribute in meta['attributes'] %}
-{% set attribute_name = "information"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
+{% set attribute_name = "on"+attribute.name[0]|upper+attribute.name[1:]+"AttributeUpdate" %}
   void {{ attribute_name }}(const {{ attribute.type }} &_{{ attribute.name }});
 {% endfor %}
 
@@ -128,8 +136,8 @@ class {{ class_name }}
    *                                           RESPONSES
    * ==========================================================================================
    */
-
 {% for method in meta['methods'] %}
+{% if method.fireAndForget %}
 
 {% if method["description"] %}
   /**
@@ -149,13 +157,15 @@ class {{ class_name }}
     const {{ param.type }} &_{{ param.name }},
 {% endif %}
 {% endfor %}
+{% endif %}
 {% endfor %}
+{% if 'broadcasts' in meta and meta['broadcasts']|length %}
 
   /* ==========================================================================================
    *                                          BROADCASTS
    * ==========================================================================================
    */
-
+{% endif %}
 {% for broadcast in meta['broadcasts'] %}
 
   /**
@@ -180,12 +190,13 @@ class {{ class_name }}
     }
   }
 {% endfor %}
+{% if 'attributes' in meta and meta['attributes']|length %}
 
   /* ==========================================================================================
    *                                          ATTRIBUTES
    * ==========================================================================================
    */
-
+{% endif %}
 {% for attribute in meta['attributes'] %}
 
   /**
@@ -193,9 +204,9 @@ class {{ class_name }}
    */
 {% set upper_name = attribute.name[0]|upper + attribute.name[1:] %}
 {% set subscription = "subscriptionOn"+upper_name+"AttributeUpdate_" %}
-{% set information = "information"+upper_name+"AttributeUpdate" %}
+{% set information = "on"+upper_name+"AttributeUpdate" %}
 {% set generatedCommonAPIAttribute = "get"+upper_name+"Attribute()" %}
-  inline void notify{{ upper_name }}(const bool _isNotify) {
+  inline void notifyOn{{ upper_name }}AttributeUpdate(const bool _isNotify) {
     debug("%s __isNotify=%s", __func__, {{ settings.project_name }}Converters::toString(_isNotify).c_str());
     if (_isNotify) {
       if ({{ settings.project_name }}Const::kEmptySubscription == {{ subscription }}) {
@@ -210,12 +221,13 @@ class {{ class_name }}
     }
   }
 {% endfor %}
+{% if 'methods' in meta and meta['methods']|length %}
 
   /* ==========================================================================================
    *                                          REQUESTS
    * ==========================================================================================
    */
-
+{% endif %}
 {% for method in meta['methods'] %}
 
   /**
